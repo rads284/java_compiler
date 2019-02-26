@@ -233,9 +233,6 @@ def p_VariableDeclarator(p):
     '''
     p[0] = p[1:]
 
-
-    print(p[1:])
-
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
     | '{' '}'
@@ -275,7 +272,6 @@ def p_MethodDeclarator(p):
         method = flatten(list(p[1]))[0]
         symbol_table[method]['params'] = []
         for param in flatten(list(p[3])):
-            print(param)
             if param in symbol_table and param not in symbol_table[method]['params']:
                 if symbol_table[param]['type'] =='identifier':
                     symbol_table[method]['params'].append(param)
