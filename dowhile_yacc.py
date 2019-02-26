@@ -1,9 +1,4 @@
-# -----------------------------------------------------------------------------
-# calc.py
-#
-# A simple calculator with variables.
-# -----------------------------------------------------------------------------
-
+from dowhile_lex import symbol_table
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -14,8 +9,6 @@ def flatten(l):
                 output.append(i)
     removeNestings(l)
     return output
-
-symbol_table = {}
 
 tokens = [
 "BOOLEAN", "BREAK", "BYTE",
@@ -37,228 +30,10 @@ tokens = [
 "IDENTIFIER", "LITERAL", "BOOLLIT", "NUM_LITERAL"
 ]
 
-keywords = ["boolean", "break", "byte",
-"char", "class", "continue",
-"do", "double",
-"else",
-"final", "finally", "float", "for",
-"if", "import", "int",
-"long",
-"new",
-"package", "private", "protected", "public",
-"return",
-"short", "static",
-"this",
-"var", "void",
-"while"]
-for kw in keywords:
-    symbol_table[kw] = {}
-    symbol_table[kw]['type'] = "keyword"
-# Tokens
-# t_OP_INC = r"\+\+"
-def t_OP_INC(t) :
- r"\+\+"
- t.type = "OP_INC"
- return t
-
-# t_OP_DEC = r"--"
-def t_OP_DEC(t) :
- r"--"
- t.type = "OP_DEC"
- return t
-
-# t_OP_GE = r">="
-def t_OP_GE(t) :
- r">="
- t.type = "OP_GE"
- return t
-
-# t_OP_LE = r"<="
-def t_OP_LE(t) :
- r"<="
- t.type = "OP_LE"
- return t
-
-# t_OP_EQ = r"=="
-def t_OP_EQ(t) :
- r"=="
- t.type = "OP_EQ"
- return t
-
-# t_OP_NE = r"!="
-def t_OP_NE(t) :
- r"!="
- t.type = "OP_NE"
- return t
-
-# t_OP_LAND = r"&&"
-def t_OP_LAND(t) :
- r"&&"
- t.type = "OP_LAND"
- return t
-
-# t_OP_LOR = r"\|\|"
-def t_OP_LOR(t) :
- r"\|\|"
- t.type = "OP_LOR"
- return t
-
-# t_ASS_MUL = r"\*="
-def t_ASS_MUL(t) :
- r"\*="
- t.type = "ASS_MUL"
- return t
-
-# t_ASS_DIV = r"/="
-def t_ASS_DIV(t) :
- r"/="
- t.type = "ASS_DIV"
- return t
-
-# t_ASS_MOD = r"%="
-def t_ASS_MOD(t) :
- r"%="
- t.type = "ASS_MOD"
- return t
-
-# t_ASS_ADD = r"\+="
-def t_ASS_ADD(t) :
- r"\+="
- t.type = "ASS_ADD"
- return t
-
-# t_ASS_SUB = r"-="
-def t_ASS_SUB(t) :
- r"-="
- t.type = "ASS_SUB"
- return t
-
-t_LITERAL  = r'\"(\\.|[^\\"])*\"'
-# t_COMMENT = r'\/\*\*(\\.|[^\\"])*\*\/'
-def t_COMMENT(t) :
-    r'\/\*\*(\\.|[^\\"])*\*\/'
-
-# t_BOOLLIT  = r'"true"|"false"'
-def t_BOOLLIT(t) :
- r'"true"|"false"'
- t.type = "BOOLLIT"
- return t
-
-literals = [';', '.', ',', '+', '-', '*', '/',
-            '%','<', '>', '!', '&', '|',
-            '(', ')', '{', '}', '=']
-def t_IDENTIFIER(t):
-    r"[A-Za-z$_][A-Za-z$_0-9]*"
-    if t.value in symbol_table:
-        if("type" in symbol_table[t.value]):
-            if(symbol_table[t.value]["type"] == "keyword"):
-                t.type = t.value.upper()
-                symbol_table[t.value]["token"] = t
-    else:
-        symbol_table[t.value] = {}
-        symbol_table[t.value]["type"] = "identifier"
-        symbol_table[t.value]["token"] = t
-        symbol_table[t.value]["valid"] = False
-    return t
-
-def t_semicolon(t):
-    r';'
-    t.type = ';'
-    return t
-
-def t_fullstop(t):
-    r'\.'
-    t.type = '.'      # Set token type to the expected literal
-    return t
-
-def t_comma(t):
-    r','
-    t.type = ','      # Set token type to the expected literal
-    return t
-def t_op_plus(t):
-    r'\+'
-    t.type = '+'      # Set token type to the expected literal
-    return t
-def t_op_minus(t):
-    r'-'
-    t.type = '-'      # Set token type to the expected literal
-    return t
-def t_op_multiply(t):
-    r'\*'
-    t.type = '*'      # Set token type to the expected literal
-    return t
-def t_divide(t):
-    r'/'
-    t.type = '/'      # Set token type to the expected literal
-    return t
-def t_op_modulus(t):
-    r'%'
-    t.type = '%'      # Set token type to the expected literal
-    return t
-def t_op_lt(t):
-    r'<'
-    t.type = '<'      # Set token type to the expected literal
-    return t
-def t_op_gt(t):
-    r'>'
-    t.type = '>'      # Set token type to the expected literal
-    return t
-def t_op_not(t):
-    r'!'
-    t.type = '!'      # Set token type to the expected literal
-    return t
-def t_op_and(t):
-    r'&'
-    t.type = '&'      # Set token type to the expected literal
-    return t
-def t_op_or(t):
-    r'\|'
-    t.type = '|'      # Set token type to the expected literal
-    return t
-def t_lparen(t):
-    r'\('
-    t.type = '('      # Set token type to the expected literal
-    return t
-def t_rparen(t):
-    r'\)'
-    t.type = ')'      # Set token type to the expected literal
-    return t
-def t_lbrace(t):
-    r'{'
-    t.type = '{'      # Set token type to the expected literal
-    return t
-def t_rbrace(t):
-    r'}'
-    t.type = '}'      # Set token type to the expected literal
-    return t
-def t_ass(t):
-    r'='
-    t.type = '='      # Set token type to the expected literal
-    return t
-
-def t_NUM_LITERAL(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
-
-# Ignored characters
-t_OP_DIM = r"\[{ |\t}*\]"
-t_ignore = " \t"
-
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += t.value.count("\n")
-
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
 
 
 # Build the lexer
-import sys
-import ply.lex as lex
-import ply.yacc as yacc
-lex.lex(debug=0)
+
 
 # Precedence rules for the arithmetic operators
 # precedence = (
@@ -267,8 +42,6 @@ lex.lex(debug=0)
 #     ('right','UMINUS'),
 #     )
 
-# dictionary of names (for storing variables)
-names = { }
 
 start = 'CompilationUnit'
 
@@ -381,8 +154,9 @@ def p_ClassHeader(p):
     if len(list(p))==4:
         symbol_table[p[3]]['modifiers'] = flatten(p[1])
     else:
-        symbol_table[p[3]]['modifiers'] = None
+        symbol_table[p[2]]['modifiers'] = None
     symbol_table[flatten(list(p))[-1]]["valid"] = True
+    symbol_table[flatten(list(p))[-1]]["dtype"] = "class"
     p[0] = p[1:]
 
 def p_Modifiers(p):
@@ -431,7 +205,6 @@ def p_FieldVariableDeclaration(p):
     '''
     if len(list(p))==4:
         for variable in flatten(list(p[3])):
-            print(flatten(list(p[3])))
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = flatten(p[1])
                 symbol_table[variable]['value'] = 'None'
@@ -439,7 +212,6 @@ def p_FieldVariableDeclaration(p):
                 symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
     else:
         for variable in flatten(list(p[2])):
-            print(flatten(list(p[2])))
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = None
                 symbol_table[variable]['value'] = 'None'
@@ -483,11 +255,15 @@ def p_MethodDeclaration(p):
     |           TypeSpecifier MethodDeclarator        MethodBody
     '''
     if len(list(p)) == 5:
-        symbol_table[flatten(list(p[3]))[0]]['modifiers'] = flatten(p[1])
-        symbol_table[flatten(list(p[3]))[0]]["valid"] = True
+        method = flatten(list(p[3]))[0]
+        symbol_table[method]['modifiers'] = flatten(p[1])
+        symbol_table[method]["valid"] = True
+        symbol_table[method]['dtype'] = flatten(list(p[2]))[0]
     else:
-        symbol_table[flatten(list(p[2]))[0]]['modifiers'] = None
-        symbol_table[flatten(list(p[2]))[0]]["valid"] = True
+        method =flatten(list(p[2]))[0]
+        symbol_table[method]['modifiers'] = None
+        symbol_table[method]["valid"] = True
+        symbol_table[method]['dtype'] = flatten(list(p[1]))[0]
     p[0] = p[1:]
 
 def p_MethodDeclarator(p):
@@ -495,7 +271,14 @@ def p_MethodDeclarator(p):
     | DeclaratorName '(' ')'
     | MethodDeclarator OP_DIM
     '''
-    symbol_table[flatten(list(p[1]))[0]]['dtype'] = flatten(list(p[-1]))[0]
+    if len(list(p)) == 5:
+        method = flatten(list(p[1]))[0]
+        symbol_table[method]['params'] = []
+        for param in flatten(list(p[3])):
+            print(param)
+            if param in symbol_table and param not in symbol_table[method]['params']:
+                if symbol_table[param]['type'] =='identifier':
+                    symbol_table[method]['params'].append(param)
     p[0] = p[1:]
 
 def p_ParameterList(p):
@@ -507,6 +290,9 @@ def p_ParameterList(p):
 def p_Parameter(p):
     '''Parameter : TypeSpecifier DeclaratorName
     '''
+    variable = flatten(list(p[2]))[0]
+    symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
+    symbol_table[variable]['valid'] = True
     p[0] = p[1:]
 
 def p_DeclaratorName(p):
@@ -527,12 +313,27 @@ def p_ConstructorDeclaration(p):
     '''ConstructorDeclaration : Modifiers ConstructorDeclarator        Block
     |           ConstructorDeclarator        Block
     '''
+    if len(list(p)) == 4:
+        method = flatten(list(p[2]))[0]
+        symbol_table[method]['modifiers'] = flatten(p[1])
+        symbol_table[method]["valid"] = True
+    else:
+        method =flatten(list(p[1]))[0]
+        symbol_table[method]['modifiers'] = None
+        symbol_table[method]["valid"] = True
     p[0] = p[1:]
 
 def p_ConstructorDeclarator(p):
     '''ConstructorDeclarator : IDENTIFIER '(' ParameterList ')'
     | IDENTIFIER '(' ')'
     '''
+    if len(list(p)) == 5:
+        method = flatten(list(p[1]))[0]
+        symbol_table[method]['params'] = []
+        for param in flatten(list(p[3])):
+            if param in symbol_table and param not in symbol_table[method]['params']:
+                if symbol_table[param]['type'] =='IDENTIFIER':
+                    symbol_table[method]['params'].append(param)
     p[0] = p[1:]
 
 def p_StaticInitializer(p):
@@ -870,35 +671,3 @@ def p_Expression(p):
     '''Expression : AssignmentExpression
     '''
     p[0] = p[1:]
-
-
-
-parser = yacc.yacc(debug=0)
-
-while True:
-    try:
-        # input_str = input('calc > ')   # Use raw_input on Python 2
-        input_str = sys.stdin.read()
-        # if __name__ == '__main__':
-            # lex.runmain()
-    except EOFError:
-        break
-    print("\n\n\n==========Tokens Generated============")
-    lex.input(input_str)
-     # Tokenize
-    while True:
-     tok = lex.token()
-     if not tok:
-         break      # No more input
-     print(tok)
-
-    x = parser.parse(input_str)
-    print("\n\n\n============Parser Output============")
-    print(x)
-    # print('success')
-    print("\n\n\n============Symbol Table=============")
-    for symbol in symbol_table:
-        if("token" in symbol_table[symbol]):
-            print(symbol_table[symbol])
-
-    # print(varg)
