@@ -7,7 +7,10 @@ def flatten(l):
                 removeNestings(i)
             else:
                 output.append(i)
-    removeNestings(l)
+    if type(l) == list:
+        removeNestings(l)
+    else:
+        output.append(l)
     return output
 
 tokens = [
@@ -232,6 +235,10 @@ def p_VariableDeclarator(p):
     | DeclaratorName '=' VariableInitializer
     '''
     p[0] = p[1:]
+    # variable = 
+    if len(list(p))==4:
+        variable = flatten(p[1])[0]
+        symbol_table[variable]['value'] = flatten(list(p[3]))[0]#int
 
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
@@ -366,7 +373,7 @@ def p_LocalVariableDeclarationStatement(p):
     for variable in flatten(list(p[2])):
         if variable in symbol_table:
             symbol_table[variable]['modifiers'] = None
-            symbol_table[variable]['value'] = None
+            # symbol_table[variable]['value'] = 6
             symbol_table[variable]['valid'] = True
             symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
     x = p[1][0][0][0]
@@ -399,7 +406,7 @@ def p_IterationStatement(p):
 def p_JumpStatement(p):
     '''JumpStatement : BREAK IDENTIFIER ';'
     | BREAK            ';'
-        | CONTINUE IDENTIFIER ';'
+    | CONTINUE IDENTIFIER ';'
     | CONTINUE            ';'
     | RETURN Expression ';'
     | RETURN            ';'
@@ -499,7 +506,7 @@ def p_ClassAllocationExpression(p):
 def p_ArrayAllocationExpression(p):
     '''ArrayAllocationExpression : NEW TypeName DimExprs Dims
     | NEW TypeName DimExprs
-        | NEW TypeName Dims
+    | NEW TypeName Dims
     '''
     p[0] = p[1:]
 
@@ -539,6 +546,8 @@ def p_UnaryExpression(p):
     | LogicalUnaryExpression
     '''
     p[0] = p[1:]
+
+
 
 def p_LogicalUnaryExpression(p):
     '''LogicalUnaryExpression : PostfixExpression
@@ -583,14 +592,58 @@ def p_MultiplicativeExpression(p):
     | MultiplicativeExpression '/' CastExpression
     | MultiplicativeExpression '%' CastExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        print(p[:])
+        t1 = flatten(p[1])[0]
+        t2 = flatten(p[3])[0]
+        if t1 in symbol_table:
+            if symbol_table[t1]['valid']:
+                t1 = symbol_table[t1]['value']
+            else:
+                print("error line:",symbol_table[t1]["token"],"   rhs = ", t1)
+
+        if t2 in symbol_table:
+            if symbol_table[t2]['valid']:
+                t2 = symbol_table[t2]['value']
+            else:
+                print("error line:",symbol_table[t2]["token"],"   rhs = ", t2)
+
+        if p[2]=='*':
+            p[0] = t1*t2
+        elif p[2]=='/':
+            p[0] = t1/t2
+        elif p[2]=='%':
+            p[0] = t1%t2
+    else:
+        p[0] = p[1:]
+
 
 def p_AdditiveExpression(p):
     '''AdditiveExpression : MultiplicativeExpression
         | AdditiveExpression '+' MultiplicativeExpression
     | AdditiveExpression '-' MultiplicativeExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = flatten(p[1])[0]
+        t2 = flatten(p[3])[0]
+        if t1 in symbol_table:
+            if symbol_table[t1]['valid']:
+                t1 = symbol_table[t1]['value']
+            else:
+                print("error line:",symbol_table[t1]["token"],"   rhs = ", t1)
+
+        if t2 in symbol_table:
+            if symbol_table[t2]['valid']:
+                t2 = symbol_table[t2]['value']
+            else:
+                print("error line:",symbol_table[t2]["token"],"   rhs = ", t2)
+                
+        if p[2]=='+':
+            p[0] = t1+t2
+        elif p[2]=='-':
+            p[0] = t1-t2
+    else:
+        p[0] = p[1:]
 
 def p_RelationalExpression(p):
     '''RelationalExpression : AdditiveExpression
@@ -648,7 +701,34 @@ def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
     | UnaryExpression AssignmentOperator AssignmentExpression
     '''
-    p[0] = p[1:]
+    if len(list(p)) == 4:
+        variable = flatten(p[1])[0]
+        p[0] = symbol_table[variable]['value']
+        rhs = flatten(p[3])[0]
+        if rhs in symbol_table:
+            if symbol_table[rhs]['valid']:
+                rhs = symbol_table[rhs]['value']
+            else:
+                print("error line:",symbol_table[rhs]["token"],"   rhs = ", rhs, 'lhs = ',symbol_table[variable]["token"])
+        if p[2][0]=='=':
+            p[0] = rhs
+        elif p[2][0]=='+=':
+            p[0] += rhs
+        elif p[2][0]=='-=':
+            p[0] -= rhs             
+        elif p[2][0]=='*=':
+            p[0] *= rhs
+        elif p[2][0]=='/=':
+            p[0] /= rhs
+        elif p[2][0]=='%=':
+            p[0] %= rhs
+        elif p[2][0]=='&=':
+            p[0] &= rhs
+        elif p[2][0]=='|=':
+            p[0] |= rhs
+        symbol_table[variable]['value'] = p[0]
+    else:
+        p[0] = p[1:]
 
 def p_AssignmentOperator(p):
     '''AssignmentOperator : '='
@@ -661,6 +741,7 @@ def p_AssignmentOperator(p):
     | ASS_OR
     '''
     p[0] = p[1:]
+    
 
 
 def p_Expression(p):
