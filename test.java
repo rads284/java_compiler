@@ -5,10 +5,10 @@ public class add {
     public static void main(int args) {
         System.out.println("Hello World");
         
-        int length = 5, breadth = 6;
+        int length = 5, breadth = -6;
 
         do{
-            length--;
+            length++;
             {
                 int a = 0,b=1;
                 int x = 5;
@@ -17,9 +17,11 @@ public class add {
             }
 
             b += 1;
-            b -=5;
+            b -= 5;
+            pkk = ~3;
+            b = pkk;
 
-        }while(length>0);
+        }while(length!=0);
         
     }
 }

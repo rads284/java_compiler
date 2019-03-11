@@ -90,16 +90,20 @@ def t_COMMENT(t) :
     r'\/\*\*(\\.|[^\\"])*\*\/'
 
 # t_BOOLLIT  = r'"true"|"false"'
-def t_BOOLLIT(t) :
- r'"true"|"false"'
- t.type = "BOOLLIT"
- return t
+# def t_BOOLLIT(t) :
+#  r'"true"|"false"'
+#  t.type = "BOOLLIT"
+#  return t
 
-literals = [';', '.', ',', '+', '-', '*', '/',
-            '%','<', '>', '!', '&', '|',
+literals = [';', '.', ',', '+', '-', '*', '/','~',
+            '%','<', '>', '!', '&', '|','^',
             '(', ')', '{', '}', '=']
+
 def t_IDENTIFIER(t):
     r"[A-Za-z$_][A-Za-z$_0-9]*"
+    if t.value == "true" or t.value == "false":
+        t.type = "BOOLLIT"
+        return t
     if t.value in symbol_table:
         if("type" in symbol_table[t.value]):
             if(symbol_table[t.value]["type"] == "keyword"):

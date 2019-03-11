@@ -13,6 +13,15 @@ def flatten(l):
         output.append(l)
     return output
 
+def retrieve(t):
+    if t in symbol_table:
+        if symbol_table[t]['valid']:
+            t = symbol_table[t]['value']
+        else:
+            print("error line:",symbol_table[t]["token"],"   rhs = ", t)
+    return t
+
+
 tokens = [
 "BOOLEAN", "BREAK", "BYTE",
 "CHAR", "CLASS", "CONTINUE",
@@ -440,7 +449,17 @@ def p_ComplexPrimaryNoParenthesis(p):
     | FieldAccess
     | MethodCall
     '''
-    p[0] = p[1:]
+    term = flatten(p[1])[0]
+    if term == "true":
+        p[0] = True
+    elif term == "false":
+        p[0] = False
+    elif type(term) == str or type(term) == int or type(term) == float:
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
+
+    
 
 def p_ArrayAccess(p):
     '''ArrayAccess : QualifiedName '[' Expression ']'
@@ -537,7 +556,13 @@ def p_RealPostfixExpression(p):
     '''RealPostfixExpression : PostfixExpression OP_INC
     | PostfixExpression OP_DEC
     '''
-    p[0] = p[1:]
+    variable = flatten(p[1])[0]
+    p[0] = retrieve(variable)
+    if p[2]=='++':
+        p[0] += 1
+    elif p[2]=='--':
+        p[0] -=1
+    symbol_table[variable]['value'] = p[0]
 
 def p_UnaryExpression(p):
     '''UnaryExpression : OP_INC UnaryExpression
@@ -545,7 +570,19 @@ def p_UnaryExpression(p):
     | ArithmeticUnaryOperator CastExpression
     | LogicalUnaryExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==3:
+        variable = flatten(p[2])[0]
+        p[0] = retrieve(variable)
+        if variable in symbol_table:
+            if p[1]=='++':
+                p[0] += 1
+            elif p[1]=='--':
+                p[0] -= 1
+            symbol_table[variable]['value'] = p[0]
+        elif p[1] == '-':
+            p[0] = -flatten(p[2])[0]
+    else:
+        p[0] = p[1:]
 
 
 
@@ -553,19 +590,26 @@ def p_LogicalUnaryExpression(p):
     '''LogicalUnaryExpression : PostfixExpression
     | LogicalUnaryOperator UnaryExpression
     '''
-    p[0] = p[1:]
+    if len(list(p)) == 3:
+        operator = p[1]
+        if operator == "!":
+            p[0] = not(flatten(p[2])[0])
+        elif operator == "~":
+            p[0] = ~(flatten(p[2])[0])
+    else:
+        p[0] = p[1:]
 
 def p_LogicalUnaryOperator(p):
     '''LogicalUnaryOperator : '~'
     | '!'
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ArithmeticUnaryOperator(p):
     '''ArithmeticUnaryOperator : '+'
     | '-'
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_CastExpression(p):
     '''CastExpression : UnaryExpression
@@ -593,21 +637,8 @@ def p_MultiplicativeExpression(p):
     | MultiplicativeExpression '%' CastExpression
     '''
     if len(list(p))==4:
-        print(p[:])
-        t1 = flatten(p[1])[0]
-        t2 = flatten(p[3])[0]
-        if t1 in symbol_table:
-            if symbol_table[t1]['valid']:
-                t1 = symbol_table[t1]['value']
-            else:
-                print("error line:",symbol_table[t1]["token"],"   rhs = ", t1)
-
-        if t2 in symbol_table:
-            if symbol_table[t2]['valid']:
-                t2 = symbol_table[t2]['value']
-            else:
-                print("error line:",symbol_table[t2]["token"],"   rhs = ", t2)
-
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
         if p[2]=='*':
             p[0] = t1*t2
         elif p[2]=='/':
@@ -624,20 +655,8 @@ def p_AdditiveExpression(p):
     | AdditiveExpression '-' MultiplicativeExpression
     '''
     if len(list(p))==4:
-        t1 = flatten(p[1])[0]
-        t2 = flatten(p[3])[0]
-        if t1 in symbol_table:
-            if symbol_table[t1]['valid']:
-                t1 = symbol_table[t1]['value']
-            else:
-                print("error line:",symbol_table[t1]["token"],"   rhs = ", t1)
-
-        if t2 in symbol_table:
-            if symbol_table[t2]['valid']:
-                t2 = symbol_table[t2]['value']
-            else:
-                print("error line:",symbol_table[t2]["token"],"   rhs = ", t2)
-                
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
         if p[2]=='+':
             p[0] = t1+t2
         elif p[2]=='-':
@@ -652,44 +671,96 @@ def p_RelationalExpression(p):
     | RelationalExpression OP_LE AdditiveExpression
     | RelationalExpression OP_GE AdditiveExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+                
+        if p[2]=='<':
+            p[0] = t1 < t2
+        elif p[2]=='>':
+            p[0] = t1 > t2
+        elif p[2]=='<=':
+            p[0] = t1 <= t2
+        elif p[2]=='>=':
+            p[0] = t1 >= t2
+    else:
+        p[0] = p[1:]
 
 def p_EqualityExpression(p):
     '''EqualityExpression : RelationalExpression
         | EqualityExpression OP_EQ RelationalExpression
         | EqualityExpression OP_NE RelationalExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+
+        if p[2]=='==':
+            p[0] = t1 == t2
+        elif p[2]=='!=':
+            p[0] = t1 != t2
+    else:
+        p[0] = p[1:]
 
 def p_AndExpression(p):
     '''AndExpression : EqualityExpression
         | AndExpression '&' EqualityExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 & t2
+
+    else:
+        p[0] = p[1:]
 
 def p_ExclusiveOrExpression(p):
     '''ExclusiveOrExpression : AndExpression
     | ExclusiveOrExpression '^' AndExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 ^ t2
+
+    else:
+        p[0] = p[1:]
 
 def p_InclusiveOrExpression(p):
     '''InclusiveOrExpression : ExclusiveOrExpression
     | InclusiveOrExpression '|' ExclusiveOrExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 | t2
+
+    else:
+        p[0] = p[1:]
 
 def p_ConditionalAndExpression(p):
     '''ConditionalAndExpression : InclusiveOrExpression
     | ConditionalAndExpression OP_LAND InclusiveOrExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+                
+        p[0] = t1 and t2
+    else:
+        p[0] = p[1:]
 
 def p_ConditionalOrExpression(p):
     '''ConditionalOrExpression : ConditionalAndExpression
     | ConditionalOrExpression OP_LOR ConditionalAndExpression
     '''
-    p[0] = p[1:]
+    if len(list(p))==4:
+        t1 = retrieve(flatten(p[1])[0])
+        t2 = retrieve(flatten(p[3])[0])
+                
+        p[0] = t1 or t2
+    else:
+        p[0] = p[1:]
 
 def p_ConditionalExpression(p):
     '''ConditionalExpression : ConditionalOrExpression
@@ -703,13 +774,9 @@ def p_AssignmentExpression(p):
     '''
     if len(list(p)) == 4:
         variable = flatten(p[1])[0]
-        p[0] = symbol_table[variable]['value']
-        rhs = flatten(p[3])[0]
-        if rhs in symbol_table:
-            if symbol_table[rhs]['valid']:
-                rhs = symbol_table[rhs]['value']
-            else:
-                print("error line:",symbol_table[rhs]["token"],"   rhs = ", rhs, 'lhs = ',symbol_table[variable]["token"])
+        p[0] = retrieve(variable)
+        rhs = retrieve(flatten(p[3])[0])
+
         if p[2][0]=='=':
             p[0] = rhs
         elif p[2][0]=='+=':
