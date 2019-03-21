@@ -1,4 +1,7 @@
 from dowhile_lex import symbol_table
+
+symbol_table_template = symbol_table
+
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -14,6 +17,7 @@ def flatten(l):
     return output
 
 def retrieve(t):
+    print(symbol_table[t])
     if t in symbol_table:
         if symbol_table[t]['valid']:
             t = symbol_table[t]['value']
@@ -34,7 +38,7 @@ tokens = [
 "SHORT", "STATIC",
 "THIS",
 "VOID",
-"WHILE",
+"WHILE","FOR",
 "OP_INC", "OP_DEC", "OP_DIM",
 "OP_GE", "OP_LE", "OP_EQ", "OP_NE",
 "OP_LAND", "OP_LOR",
@@ -215,6 +219,7 @@ def p_FieldVariableDeclaration(p):
     '''FieldVariableDeclaration : Modifiers TypeSpecifier VariableDeclarators
     |           TypeSpecifier VariableDeclarators
     '''
+    print(p[:])
     if len(list(p))==4:
         for variable in flatten(list(p[3])):
             if variable in symbol_table:
@@ -222,6 +227,7 @@ def p_FieldVariableDeclaration(p):
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
                 symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
+                symbol_table[variable]['global'] = True
     else:
         for variable in flatten(list(p[2])):
             if variable in symbol_table:
@@ -229,6 +235,7 @@ def p_FieldVariableDeclaration(p):
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
                 symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
+                symbol_table[variable]['global'] = True
 
     p[0] = p[1:]
 
@@ -391,7 +398,7 @@ def p_LocalVariableDeclarationStatement(p):
 def p_Statement(p):
     '''Statement : EmptyStatement
     | ExpressionStatement ';'
-        | IterationStatement
+    | IterationStatement
     | JumpStatement
     | Block
     '''
@@ -409,6 +416,31 @@ def p_ExpressionStatement(p):
 
 def p_IterationStatement(p):
     '''IterationStatement : DO Statement WHILE '(' Expression ')' ';'
+    | FOR '(' ForInit ForExpr ForIncr ')' Statement
+    | FOR '(' ForInit ForExpr         ')' Statement
+    '''
+    p[0] = p[1:]
+    
+def p_ForInit(p):
+    '''ForInit : ExpressionStatements ';'
+    | LocalVariableDeclarationStatement
+    | ';'
+    '''
+    p[0] = p[1:]
+
+def p_ForExpr(p):
+    '''ForExpr : Expression ';'
+    | ';'
+    '''
+    p[0] = p[1:]
+
+def p_ForIncr(p):
+    '''ForIncr : ExpressionStatements '''
+    p[0] = p[1:]
+
+def p_ExpressionStatements(p):
+    '''ExpressionStatements : ExpressionStatement
+    | ExpressionStatements ',' ExpressionStatement 
     '''
     p[0] = p[1:]
 
@@ -648,10 +680,10 @@ def p_MultiplicativeExpression(p):
     else:
         p[0] = p[1:]
 
-
+# Need to add string case.
 def p_AdditiveExpression(p):
     '''AdditiveExpression : MultiplicativeExpression
-        | AdditiveExpression '+' MultiplicativeExpression
+    | AdditiveExpression '+' MultiplicativeExpression
     | AdditiveExpression '-' MultiplicativeExpression
     '''
     if len(list(p))==4:

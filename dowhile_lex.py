@@ -13,7 +13,7 @@ keywords = ["boolean", "break", "byte",
 "short", "static",
 "this",
 "var", "void",
-"while"]
+"while","for"]
 for kw in keywords:
     symbol_table[kw] = {}
     symbol_table[kw]['type'] = "keyword"

@@ -1,7 +1,7 @@
 package test;
 import java.util.*;
 public class add {
-    
+    int x = 0;
     public static void main(int args) {
         System.out.println("Hello World");
         
@@ -18,9 +18,8 @@ public class add {
 
             b += 1;
             b -= 5;
-            pkk = ~3;
-            b = pkk;
-
+            for (int x = 2; x <= 4;) 
+                System.out.println(x); 
         }while(length!=0);
         
     }
