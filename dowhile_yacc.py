@@ -1,7 +1,4 @@
 from dowhile_lex import symbol_table
-
-symbol_table_template = symbol_table
-
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -17,7 +14,6 @@ def flatten(l):
     return output
 
 def retrieve(t):
-    print(symbol_table[t])
     if t in symbol_table:
         if symbol_table[t]['valid']:
             t = symbol_table[t]['value']
@@ -219,23 +215,23 @@ def p_FieldVariableDeclaration(p):
     '''FieldVariableDeclaration : Modifiers TypeSpecifier VariableDeclarators
     |           TypeSpecifier VariableDeclarators
     '''
-    print(p[:])
+    # print(p[:])
     if len(list(p))==4:
         for variable in flatten(list(p[3])):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = flatten(p[1])
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
-                symbol_table[variable]['global'] = True
+            if (variable,True) in symbol_table:
+                symbol_table[(variable,True)]['modifiers'] = flatten(p[1])
+                symbol_table[(variable,True)]['value'] = 'None'
+                symbol_table[(variable,True)]["valid"] = True
+                symbol_table[(variable,True)]['dtype'] = flatten(list(p[2]))[0]
+                # symbol_table[(variable,True)]['global'] = True
     else:
         for variable in flatten(list(p[2])):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = None
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
-                symbol_table[variable]['global'] = True
+            if (variable,True) in symbol_table:
+                symbol_table[(variable,True)]['modifiers'] = None
+                symbol_table[(variable,True)]['value'] = 'None'
+                symbol_table[(variable,True)]["valid"] = True
+                symbol_table[(variable,True)]['dtype'] = flatten(list(p[1]))[0]
+                # symbol_table[(variable,True)]['global'] = True
 
     p[0] = p[1:]
 
@@ -386,6 +382,7 @@ def p_LocalVariableDeclarationOrStatement(p):
 def p_LocalVariableDeclarationStatement(p):
     '''LocalVariableDeclarationStatement : TypeSpecifier VariableDeclarators ';'
     '''
+    print(p[:])
     for variable in flatten(list(p[2])):
         if variable in symbol_table:
             symbol_table[variable]['modifiers'] = None

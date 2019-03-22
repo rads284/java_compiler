@@ -9,16 +9,16 @@ public class add {
 
         do{
             length++;
-            {
-                int a = 0,b=1;
-                int x = 5;
-                a = b*x + 1;
-                System.out.println("Inside Dowhile");
-            }
+            
+            int a = 0,b=1;
+            int x = 5;
+            a = b*x + 1;
+            System.out.println("Inside Dowhile");
+            
 
             b += 1;
             b -= 5;
-            for (int x = 2; x <= 4;) 
+            for (x = 2; x <= 4;) 
                 System.out.println(x); 
         }while(length!=0);
         
