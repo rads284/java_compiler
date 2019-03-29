@@ -1,7 +1,7 @@
 package test;
 import java.util.*;
 public class add {
-    int x = 0;
+    int z = 0;
     public static void main(int args) {
         System.out.println("Hello World");
         

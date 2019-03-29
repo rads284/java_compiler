@@ -93,6 +93,9 @@ for symbol in symbol_table:
     	if(symbol_table[symbol]["type"] == "identifier" and symbol_table[symbol]["valid"] == True):
         	print(symbol,"\t",symbol_table[symbol])
 
+print("\n\n\n\n")
+# print(class_table)
+
 # dictlist = []
 # for key, value in symbol_table.iteritems():
 #     temp = [key,value]

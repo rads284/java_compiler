@@ -218,19 +218,19 @@ def p_FieldVariableDeclaration(p):
     # print(p[:])
     if len(list(p))==4:
         for variable in flatten(list(p[3])):
-            if (variable,True) in symbol_table:
-                symbol_table[(variable,True)]['modifiers'] = flatten(p[1])
-                symbol_table[(variable,True)]['value'] = 'None'
-                symbol_table[(variable,True)]["valid"] = True
-                symbol_table[(variable,True)]['dtype'] = flatten(list(p[2]))[0]
+            if variable in symbol_table:
+                symbol_table[variable]['modifiers'] = flatten(p[1])
+                symbol_table[variable]['value'] = 'None'
+                symbol_table[variable]["valid"] = True
+                symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
                 # symbol_table[(variable,True)]['global'] = True
     else:
         for variable in flatten(list(p[2])):
-            if (variable,True) in symbol_table:
-                symbol_table[(variable,True)]['modifiers'] = None
-                symbol_table[(variable,True)]['value'] = 'None'
-                symbol_table[(variable,True)]["valid"] = True
-                symbol_table[(variable,True)]['dtype'] = flatten(list(p[1]))[0]
+            if variable in symbol_table:
+                symbol_table[variable]['modifiers'] = None
+                symbol_table[variable]['value'] = 'None'
+                symbol_table[variable]["valid"] = True
+                symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
                 # symbol_table[(variable,True)]['global'] = True
 
     p[0] = p[1:]
