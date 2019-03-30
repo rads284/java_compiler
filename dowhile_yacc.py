@@ -75,13 +75,16 @@ def p_TypeSpecifier(p):
     '''TypeSpecifier : TypeName
     | TypeName Dims
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_TypeName(p):
     '''TypeName : PrimitiveType
     | QualifiedName
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_PrimitiveType(p):
     '''PrimitiveType : BOOLEAN
@@ -94,18 +97,21 @@ def p_PrimitiveType(p):
     | DOUBLE
     | VOID
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_SemiColons(p):
     '''SemiColons : ';'
     | SemiColons ';'
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_CompilationUnit(p):
     '''CompilationUnit : ProgramFile
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ProgramFile(p):
     '''ProgramFile : PackageStatement ImportStatements TypeDeclarations
@@ -116,7 +122,10 @@ def p_ProgramFile(p):
     |                  ImportStatements
     |                                   TypeDeclarations
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_PackageStatement(p):
     '''PackageStatement : PACKAGE QualifiedName SemiColons
@@ -127,7 +136,10 @@ def p_TypeDeclarations(p):
     '''TypeDeclarations : TypeDeclarationOptSemi
     | TypeDeclarations TypeDeclarationOptSemi
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_TypeDeclarationOptSemi(p):
     '''TypeDeclarationOptSemi : TypeDeclaration
@@ -139,7 +151,10 @@ def p_ImportStatements(p):
     '''ImportStatements : ImportStatement
     | ImportStatements ImportStatement
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ImportStatement(p):
     '''ImportStatement : IMPORT QualifiedName SemiColons
@@ -151,7 +166,10 @@ def p_QualifiedName(p):
     '''QualifiedName : IDENTIFIER
     | QualifiedName '.' IDENTIFIER
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_TypeDeclaration(p):
     '''TypeDeclaration : ClassHeader '{' FieldDeclarations '}'
@@ -175,7 +193,10 @@ def p_Modifiers(p):
     '''Modifiers : Modifier
     | Modifiers Modifier
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_Modifier(p):
     '''Modifier : PUBLIC
@@ -183,54 +204,62 @@ def p_Modifier(p):
     | PRIVATE
     | STATIC
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ClassWord(p):
     '''ClassWord : CLASS'''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_FieldDeclarations(p):
     '''FieldDeclarations : FieldDeclarationOptSemi
         | FieldDeclarations FieldDeclarationOptSemi
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_FieldDeclarationOptSemi(p):
     '''FieldDeclarationOptSemi : FieldDeclaration
         | FieldDeclaration SemiColons
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_FieldDeclaration(p):
     '''FieldDeclaration : FieldVariableDeclaration ';'
     | MethodDeclaration
     | ConstructorDeclaration
     | StaticInitializer
-        | NonStaticInitializer
-        | TypeDeclaration
+    | NonStaticInitializer
+    | TypeDeclaration
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_FieldVariableDeclaration(p):
     '''FieldVariableDeclaration : Modifiers TypeSpecifier VariableDeclarators
     |           TypeSpecifier VariableDeclarators
     '''
-    # print(p[:])
     if len(list(p))==4:
-        for variable in flatten(list(p[3])):
+        for variable in flatten(p[3]):
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = flatten(p[1])
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
+                symbol_table[variable]['dtype'] = flatten(p[2])[0]
                 # symbol_table[(variable,True)]['global'] = True
     else:
-        for variable in flatten(list(p[2])):
+        for variable in flatten(p[2]):
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = None
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
+                symbol_table[variable]['dtype'] = flatten(p[1])[0]
                 # symbol_table[(variable,True)]['global'] = True
 
     p[0] = p[1:]
@@ -239,47 +268,57 @@ def p_VariableDeclarators(p):
     '''VariableDeclarators : VariableDeclarator
     | VariableDeclarators ',' VariableDeclarator
     '''
-    # x = p[0][0][0]
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_VariableDeclarator(p):
     '''VariableDeclarator : DeclaratorName
     | DeclaratorName '=' VariableInitializer
     '''
-    p[0] = p[1:]
-    # variable = 
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
     if len(list(p))==4:
         variable = flatten(p[1])[0]
-        symbol_table[variable]['value'] = flatten(list(p[3]))[0]#int
+        symbol_table[variable]['value'] = flatten(p[3])[0]#int
 
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
     | '{' '}'
         | '{' ArrayInitializers '}'
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ArrayInitializers(p):
     '''ArrayInitializers : VariableInitializer
     | ArrayInitializers ',' VariableInitializer
     | ArrayInitializers ','
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_MethodDeclaration(p):
     '''MethodDeclaration : Modifiers TypeSpecifier MethodDeclarator        MethodBody
     |           TypeSpecifier MethodDeclarator        MethodBody
     '''
     if len(list(p)) == 5:
-        method = flatten(list(p[3]))[0]
+        method = flatten(p[3])[0]
         symbol_table[method]['modifiers'] = flatten(p[1])
         symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(list(p[2]))[0]
+        symbol_table[method]['dtype'] = flatten(p[2])[0]
     else:
-        method =flatten(list(p[2]))[0]
+        method =flatten(p[2])[0]
         symbol_table[method]['modifiers'] = None
         symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(list(p[1]))[0]
+        symbol_table[method]['dtype'] = flatten(p[1])[0]
     p[0] = p[1:]
 
 def p_MethodDeclarator(p):
@@ -288,9 +327,9 @@ def p_MethodDeclarator(p):
     | MethodDeclarator OP_DIM
     '''
     if len(list(p)) == 5:
-        method = flatten(list(p[1]))[0]
+        method = flatten(p[1])[0]
         symbol_table[method]['params'] = []
-        for param in flatten(list(p[3])):
+        for param in flatten(p[3]):
             if param in symbol_table and param not in symbol_table[method]['params']:
                 if symbol_table[param]['type'] =='identifier':
                     symbol_table[method]['params'].append(param)
@@ -300,13 +339,16 @@ def p_ParameterList(p):
     '''ParameterList : Parameter
     | ParameterList ',' Parameter
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_Parameter(p):
     '''Parameter : TypeSpecifier DeclaratorName
     '''
-    variable = flatten(list(p[2]))[0]
-    symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
+    variable = flatten(p[2])[0]
+    symbol_table[variable]['dtype'] = flatten(p[1])[0]
     symbol_table[variable]['valid'] = True
     p[0] = p[1:]
 
@@ -314,26 +356,28 @@ def p_DeclaratorName(p):
     '''DeclaratorName : IDENTIFIER
     | DeclaratorName OP_DIM
     '''
-
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 
 def p_MethodBody(p):
     '''MethodBody : Block
     | ';'
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ConstructorDeclaration(p):
     '''ConstructorDeclaration : Modifiers ConstructorDeclarator        Block
     |           ConstructorDeclarator        Block
     '''
     if len(list(p)) == 4:
-        method = flatten(list(p[2]))[0]
+        method = flatten(p[2])[0]
         symbol_table[method]['modifiers'] = flatten(p[1])
         symbol_table[method]["valid"] = True
     else:
-        method =flatten(list(p[1]))[0]
+        method =flatten(p[1])[0]
         symbol_table[method]['modifiers'] = None
         symbol_table[method]["valid"] = True
     p[0] = p[1:]
@@ -343,9 +387,9 @@ def p_ConstructorDeclarator(p):
     | IDENTIFIER '(' ')'
     '''
     if len(list(p)) == 5:
-        method = flatten(list(p[1]))[0]
+        method = flatten(p[1])[0]
         symbol_table[method]['params'] = []
-        for param in flatten(list(p[3])):
+        for param in flatten(p[3]):
             if param in symbol_table and param not in symbol_table[method]['params']:
                 if symbol_table[param]['type'] =='IDENTIFIER':
                     symbol_table[method]['params'].append(param)
@@ -359,7 +403,7 @@ def p_StaticInitializer(p):
 def p_NonStaticInitializer(p):
     '''NonStaticInitializer : Block
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_Block(p):
     '''Block : '{' LocalVariableDeclarationsAndStatements '}'
@@ -371,25 +415,29 @@ def p_LocalVariableDeclarationsAndStatements(p):
     '''LocalVariableDeclarationsAndStatements : LocalVariableDeclarationOrStatement
     | LocalVariableDeclarationsAndStatements LocalVariableDeclarationOrStatement
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_LocalVariableDeclarationOrStatement(p):
     '''LocalVariableDeclarationOrStatement : LocalVariableDeclarationStatement
     | Statement
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_LocalVariableDeclarationStatement(p):
     '''LocalVariableDeclarationStatement : TypeSpecifier VariableDeclarators ';'
     '''
-    print(p[:])
-    for variable in flatten(list(p[2])):
+    for variable in flatten(p[2]):
         if variable in symbol_table:
             symbol_table[variable]['modifiers'] = None
             # symbol_table[variable]['value'] = 6
             symbol_table[variable]['valid'] = True
-            symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
-    x = p[1][0][0][0]
+            symbol_table[variable]['dtype'] = flatten(p[1])[0]
     p[0] = p[1:]
 
 def p_Statement(p):
@@ -399,17 +447,20 @@ def p_Statement(p):
     | JumpStatement
     | Block
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_EmptyStatement(p):
     '''EmptyStatement : ';'
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ExpressionStatement(p):
     '''ExpressionStatement : Expression
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_IterationStatement(p):
     '''IterationStatement : DO Statement WHILE '(' Expression ')' ';'
@@ -423,23 +474,32 @@ def p_ForInit(p):
     | LocalVariableDeclarationStatement
     | ';'
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ForExpr(p):
     '''ForExpr : Expression ';'
     | ';'
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ForIncr(p):
     '''ForIncr : ExpressionStatements '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ExpressionStatements(p):
     '''ExpressionStatements : ExpressionStatement
     | ExpressionStatements ',' ExpressionStatement 
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_JumpStatement(p):
     '''JumpStatement : BREAK IDENTIFIER ';'
@@ -455,20 +515,23 @@ def p_PrimaryExpression(p):
     '''PrimaryExpression : QualifiedName
     | NotJustName
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_NotJustName(p):
     '''NotJustName : SpecialName
     | NewAllocationExpression
     | ComplexPrimary
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ComplexPrimary(p):
     '''ComplexPrimary : '(' Expression ')'
     | ComplexPrimaryNoParenthesis
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ComplexPrimaryNoParenthesis(p):
     '''ComplexPrimaryNoParenthesis : LITERAL
@@ -486,7 +549,7 @@ def p_ComplexPrimaryNoParenthesis(p):
     elif type(term) == str or type(term) == int or type(term) == float:
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
     
 
@@ -516,24 +579,30 @@ def p_MethodAccess(p):
     | SpecialName
     | QualifiedName
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_SpecialName(p):
     '''SpecialName : THIS
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_ArgumentList(p):
     '''ArgumentList : Expression
     | ArgumentList ',' Expression
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_NewAllocationExpression(p):
     '''NewAllocationExpression : PlainNewAllocationExpression
         | QualifiedName '.' PlainNewAllocationExpression
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_PlainNewAllocationExpression(p):
     '''PlainNewAllocationExpression : ArrayAllocationExpression
@@ -543,7 +612,10 @@ def p_PlainNewAllocationExpression(p):
         | ArrayAllocationExpression '{' ArrayInitializers '}'
         | ClassAllocationExpression '{' FieldDeclarations '}'
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ClassAllocationExpression(p):
     '''ClassAllocationExpression : NEW TypeName '(' ArgumentList ')'
@@ -562,7 +634,10 @@ def p_DimExprs(p):
     '''DimExprs : DimExpr
     | DimExprs DimExpr
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_DimExpr(p):
     '''DimExpr : '[' Expression ']'
@@ -573,13 +648,16 @@ def p_Dims(p):
     '''Dims : OP_DIM
     | Dims OP_DIM
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_PostfixExpression(p):
     '''PostfixExpression : PrimaryExpression
     | RealPostfixExpression
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
 
 def p_RealPostfixExpression(p):
     '''RealPostfixExpression : PostfixExpression OP_INC
@@ -610,6 +688,8 @@ def p_UnaryExpression(p):
             symbol_table[variable]['value'] = p[0]
         elif p[1] == '-':
             p[0] = -flatten(p[2])[0]
+    elif(len(p[:]) == 2):
+        p[0] = p[1]
     else:
         p[0] = p[1:]
 
@@ -626,7 +706,7 @@ def p_LogicalUnaryExpression(p):
         elif operator == "~":
             p[0] = ~(flatten(p[2])[0])
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_LogicalUnaryOperator(p):
     '''LogicalUnaryOperator : '~'
@@ -646,13 +726,19 @@ def p_CastExpression(p):
     | '(' ClassTypeExpression ')' CastExpression
     | '(' Expression ')' LogicalUnaryExpression
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_PrimitiveTypeExpression(p):
     '''PrimitiveTypeExpression : PrimitiveType
         | PrimitiveType Dims
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ClassTypeExpression(p):
     '''ClassTypeExpression : QualifiedName Dims
@@ -683,9 +769,14 @@ def p_AdditiveExpression(p):
     | AdditiveExpression '+' MultiplicativeExpression
     | AdditiveExpression '-' MultiplicativeExpression
     '''
+    print(p[:])
     if len(list(p))==4:
         t1 = retrieve(flatten(p[1])[0])
         t2 = retrieve(flatten(p[3])[0])
+    
+
+
+
         if p[2]=='+':
             p[0] = t1+t2
         elif p[2]=='-':
@@ -728,6 +819,8 @@ def p_EqualityExpression(p):
             p[0] = t1 == t2
         elif p[2]=='!=':
             p[0] = t1 != t2
+    elif(len(p[:]) == 2):
+        p[0] = p[1]
     else:
         p[0] = p[1:]
 
@@ -739,7 +832,8 @@ def p_AndExpression(p):
         t1 = retrieve(flatten(p[1])[0])
         t2 = retrieve(flatten(p[3])[0])
         p[0] = t1 & t2
-
+    elif(len(p[:]) == 2):
+        p[0] = p[1]
     else:
         p[0] = p[1:]
 
@@ -751,9 +845,8 @@ def p_ExclusiveOrExpression(p):
         t1 = retrieve(flatten(p[1])[0])
         t2 = retrieve(flatten(p[3])[0])
         p[0] = t1 ^ t2
-
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_InclusiveOrExpression(p):
     '''InclusiveOrExpression : ExclusiveOrExpression
@@ -765,7 +858,7 @@ def p_InclusiveOrExpression(p):
         p[0] = t1 | t2
 
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_ConditionalAndExpression(p):
     '''ConditionalAndExpression : InclusiveOrExpression
@@ -777,7 +870,7 @@ def p_ConditionalAndExpression(p):
                 
         p[0] = t1 and t2
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_ConditionalOrExpression(p):
     '''ConditionalOrExpression : ConditionalAndExpression
@@ -789,18 +882,22 @@ def p_ConditionalOrExpression(p):
                 
         p[0] = t1 or t2
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_ConditionalExpression(p):
     '''ConditionalExpression : ConditionalOrExpression
     | ConditionalOrExpression '?' Expression ':' ConditionalExpression
     '''
-    p[0] = p[1:]
+    if(len(p[:]) == 2):
+        p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
     | UnaryExpression AssignmentOperator AssignmentExpression
     '''
+    print(p[:])
     if len(list(p)) == 4:
         variable = flatten(p[1])[0]
         p[0] = retrieve(variable)
@@ -824,7 +921,7 @@ def p_AssignmentExpression(p):
             p[0] |= rhs
         symbol_table[variable]['value'] = p[0]
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 def p_AssignmentOperator(p):
     '''AssignmentOperator : '='
@@ -836,11 +933,11 @@ def p_AssignmentOperator(p):
     | ASS_AND
     | ASS_OR
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
     
 
 
 def p_Expression(p):
     '''Expression : AssignmentExpression
     '''
-    p[0] = p[1:]
+    p[0] = p[1]
