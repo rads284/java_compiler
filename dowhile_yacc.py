@@ -1,4 +1,4 @@
-from dowhile_lex import symbol_table,keywords
+from dowhile_lex import symbol_table
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -21,15 +21,14 @@ def retrieve(t):
             print("error line:",symbol_table[t]["token"],"   rhs = ", t)
     return t
 
-
-stack = []
-label = []
-var_num = 0
-lab_num = -1
+from anytree import Node
+from anytree import RenderTree
+# from anytree.dotexport import RenderTreeGraph
+from anytree.exporter import DotExporter
 
 tokens = [
 "BOOLEAN", "BREAK", "BYTE",
-"CHAR", "CLASS", "CONTINUE",
+"CHAR", "CLASS", "CONTINUE","COMMENT",
 "DO", "DOUBLE",
 "FLOAT", "IMPORT", "INT",
 "LONG",
@@ -61,95 +60,31 @@ tokens = [
 
 
 start = 'CompilationUnit'
-
+root = Node("root")
 # def p_OP_DIM(p):
 #     'OP_DIM :'
 #     pass
 
-
-def p_CodegenPrefix(p):
-    '''codegen_prefix :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , flatten(p[-1])[0], flatten(p[-2])[0][0], 1 )
-    print(flatten(p[-1])[0], ' = ', cur_var)
-    
-    var_num+=1
-
-def p_CodegenPostfix(p):
-    '''codegen_postfix :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , flatten(p[-2])[0], flatten(p[-1])[0][0], 1 )
-    print(flatten(p[-2])[0], ' = ', cur_var)
-    
-    var_num+=1
-
-def p_CodegenShorthand(p):
-    '''codegen_shorthand :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , stack[-3], stack[-2][0], stack[-1] )
-    print(stack[-3], ' = ', cur_var)
-    stack.pop()
-    stack.pop()
-    stack.pop()
-    
-    var_num+=1
-
-def p_CodegenDeclarator(p):
-    '''codegen_declarator :'''
-    print(stack[-2],' = ',stack[-1])
-    stack.pop()
-    stack.pop()
-
-def p_Push(p):
-    '''push :'''
-    # print(stack,'ancd',p[-1],'abc',p[:])
-    if len(stack) == 0 and flatten(p[-2])[0] not in symbol_table:
-        stack.append(flatten(p[-2])[0])
-    stack.append(flatten(p[-1])[0])
-
-def p_CodegenBinop(p):
-    '''codegen_binop :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-    print(cur_var," = ", stack[-3],stack[-2],stack[-1])
-    stack.pop()
-    stack.pop()
-    stack.pop()
-    stack.append(cur_var)
-    var_num+=1
-
-def p_CodegenAssign(p):
-    '''codegen_assign :'''
-    global var_num
-    print(stack[-2],' = ',stack[-1])
-    stack.pop()
-    stack.pop()
-
-
 def p_error(p):
-
+    print("error")
     # get formatted representation of stack
-    stack_state_str = ' '.join([symbol.type for symbol in parser.symstack][1:])
+    # stack_state_str = ' '.join([symbol.type for symbol in parser.symstack][1:])
 
-    print('Syntax error in input! Parser State:{} {} . {}'
-          .format(parser.state,
-                  stack_state_str,
-                  p))
+    # print('Syntax error in input! Parser State:{} {} . {}'
+    #       .format(parser.state,
+    #               stack_state_str,
+    #               p))
 
 def p_TypeSpecifier(p):
     '''TypeSpecifier : TypeName
     | TypeName Dims
     '''
+    
     if(len(list(p)) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node("TypeSpecifier",children=[p[1],p[2]])
+    # print("xdfgbhnjkl",p[:])
 
 def p_TypeName(p):
     '''TypeName : PrimitiveType
@@ -168,21 +103,25 @@ def p_PrimitiveType(p):
     | DOUBLE
     | VOID
     '''
-    p[0] = p[1]
+    p[0] = Node(p[1])
 
 def p_SemiColons(p):
     '''SemiColons : ';'
     | SemiColons ';'
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
+    if(len(list(p)) == 3):
+        p[0] = Node("SemiColons",children=[p[1],Node(p[2])])
     else:
-        p[0] = p[1:]
+        p[0] = Node("SemiColons",children=[Node(p[1])])
 
 def p_CompilationUnit(p):
     '''CompilationUnit : ProgramFile
     '''
-    p[0] = p[1]
+    root.children = [p[1]]
+    for pre, _, node in RenderTree(root):
+        print("%s%s" % (pre, node.name))
+    # DotExporter(root).to_dotfile("tree.dot")
+    p[0] = root
 
 def p_ProgramFile(p):
     '''ProgramFile : PackageStatement ImportStatements TypeDeclarations
@@ -193,60 +132,62 @@ def p_ProgramFile(p):
     |                  ImportStatements
     |                                   TypeDeclarations
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = Node("ProgramFile",children = p[1:])
+    # p[0] = p[1:]
 
 def p_PackageStatement(p):
     '''PackageStatement : PACKAGE QualifiedName SemiColons
     '''
-    p[0] = p[1:]
+    p[0] = Node("PackageStatement",children=[Node(p[1]),p[2],p[3]])
 
 def p_TypeDeclarations(p):
     '''TypeDeclarations : TypeDeclarationOptSemi
     | TypeDeclarations TypeDeclarationOptSemi
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = Node("TypeDeclarations",children = p[1:])
+    # p[0] = p[1:]
 
 def p_TypeDeclarationOptSemi(p):
     '''TypeDeclarationOptSemi : TypeDeclaration
         | TypeDeclaration SemiColons
     '''
-    p[0] = p[1:]
+    p[0] = Node("TypeDeclarationOptSemi",children = p[1:])
+    # p[0] = p[1:]
 
 def p_ImportStatements(p):
     '''ImportStatements : ImportStatement
     | ImportStatements ImportStatement
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = Node("ImportStatements",children=p[1:])
 
 def p_ImportStatement(p):
     '''ImportStatement : IMPORT QualifiedName SemiColons
     | IMPORT QualifiedName '.' '*' SemiColons
     '''
-    p[0] = p[1:]
+    if(len(list(p)) == 4):
+        p[0] = Node("ImportStatement",children = [Node(p[1]),p[2],p[3]])
+    else:
+        p[0] = Node("ImportStatement",children = [Node(p[1]),p[2],Node(p[3]),Node(p[4]),p[5]])
 
 def p_QualifiedName(p):
     '''QualifiedName : IDENTIFIER
     | QualifiedName '.' IDENTIFIER
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
+    if(len(list(p)) == 4):
+        p[0] = Node("QualifiedName",children = [p[1],Node(p[3])])
     else:
-        p[0] = p[1:]
+        p[0] = Node(p[1])
 
 def p_TypeDeclaration(p):
     '''TypeDeclaration : ClassHeader '{' FieldDeclarations '}'
     | ClassHeader '{' '}'
     '''
-    p[0] = p[1:]
+    if(len(list(p)) == 5):
+        p[0] = Node("Type Declaration",children = [p[1],Node(p[2]),p[3],Node(p[4])])
+    else:
+        p[0] = Node("Type Declaration",children = [p[1],Node(p[2]),Node(p[3])])
+
+    # p[0] = p[1:]
 
 def p_ClassHeader(p):
     '''ClassHeader : Modifiers ClassWord IDENTIFIER
@@ -254,20 +195,24 @@ def p_ClassHeader(p):
     '''
     if len(list(p))==4:
         symbol_table[p[3]]['modifiers'] = flatten(p[1])
+        var = Node(p[3])
+        p[0] = Node("ClassHeader",children = [p[1],p[2],var])
     else:
         symbol_table[p[2]]['modifiers'] = None
+        var = Node(p[2])
+        p[0] = Node("ClassHeader",children = [p[1], var])
     symbol_table[flatten(list(p))[-1]]["valid"] = True
     symbol_table[flatten(list(p))[-1]]["dtype"] = "class"
-    p[0] = p[1:]
+
+
+    # p[0] = p[1:]
 
 def p_Modifiers(p):
     '''Modifiers : Modifier
     | Modifiers Modifier
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = Node("Modifiers",children = p[1:])
+    # p[0] = p[1:]
 
 def p_Modifier(p):
     '''Modifier : PUBLIC
@@ -275,96 +220,98 @@ def p_Modifier(p):
     | PRIVATE
     | STATIC
     '''
-    p[0] = p[1]
+    var = Node(p[1])
+    p[0] = Node("Modifier",children = [var])
+    # p[0] = p[1:]
 
 def p_ClassWord(p):
     '''ClassWord : CLASS'''
-    p[0] = p[1]
+    var = Node(p[1])
+    p[0] = Node("Class",children = [var])
+    # p[0] = p[1:]
 
 def p_FieldDeclarations(p):
     '''FieldDeclarations : FieldDeclarationOptSemi
         | FieldDeclarations FieldDeclarationOptSemi
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = Node("Field Declaration",children = p[1:])
 
 def p_FieldDeclarationOptSemi(p):
     '''FieldDeclarationOptSemi : FieldDeclaration
         | FieldDeclaration SemiColons
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    # p[0] = p[1:]
+    p[0] = Node("Field Declaration Opt Semi",children=p[1:])
 
 def p_FieldDeclaration(p):
     '''FieldDeclaration : FieldVariableDeclaration ';'
     | MethodDeclaration
     | ConstructorDeclaration
     | StaticInitializer
-    | NonStaticInitializer
-    | TypeDeclaration
+        | NonStaticInitializer
+        | TypeDeclaration
     '''
     if(len(list(p)) == 2):
-        p[0] = p[1]
+        p[0] = Node("FieldDeclaration",children=[p[1]])
     else:
-        p[0] = p[1:]
+        p[0] = Node("FieldDeclaration",children=[p[1],Node(p[2])])
 
 def p_FieldVariableDeclaration(p):
     '''FieldVariableDeclaration : Modifiers TypeSpecifier VariableDeclarators
     |           TypeSpecifier VariableDeclarators
     '''
     if len(list(p))==4:
-        for variable in flatten(p[3]):
+        for variable in flatten(list(p[3])):
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = flatten(p[1])
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[2])[0]
+                symbol_table[variable]['dtype'] = flatten(list(p[2]))[0]
                 # symbol_table[(variable,True)]['global'] = True
     else:
-        for variable in flatten(p[2]):
+        for variable in flatten(list(p[2])):
             if variable in symbol_table:
                 symbol_table[variable]['modifiers'] = None
                 symbol_table[variable]['value'] = 'None'
                 symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[1])[0]
+                symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
                 # symbol_table[(variable,True)]['global'] = True
-
-    p[0] = p[1:]
+    p[0] = Node("FieldVariableDeclaration",children = p[1:])
 
 def p_VariableDeclarators(p):
     '''VariableDeclarators : VariableDeclarator
     | VariableDeclarators ',' VariableDeclarator
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
+    if(len(list(p)) == 4):
+        p[0] = Node("VariableDeclarators",children=[p[1],p[3]])
     else:
-        p[0] = p[1:]
+        p[0] = Node("VariableDeclarators",children=[p[1]])
 
 def p_VariableDeclarator(p):
     '''VariableDeclarator : DeclaratorName
-    | DeclaratorName push '=' VariableInitializer codegen_declarator
+    | DeclaratorName '=' VariableInitializer
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
+    if len(list(p))==4:
+        variable = p[1].name
+        # symbol_table[variable]['value'] = flatten(list(p[3]))[0]
+        p[0] = Node("=",children=[p[1],p[3]])
     else:
-        p[0] = p[1:2]+p[3:5]
-    if len(list(p))==5:
-        variable = flatten(p[1])[0]
-        symbol_table[variable]['value'] = flatten(p[3])[0]#int
+        p[0] = p[1]
 
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
     | '{' '}'
         | '{' ArrayInitializers '}'
     '''
+
     if(len(list(p)) == 2):
         p[0] = p[1]
+    elif(len(list(p)) == 3):
+        p[0] = Node("VariableInitializer",children=[Node(p[1]),Node(p[2])])
     else:
-        p[0] = p[1:]
+        p[0] = p[2]
+        # p[0] = Node("VariableInitializer",children=[Node(p[1]),p[2],Node(p[3])])
+    # print(p[0])
 
 def p_ArrayInitializers(p):
     '''ArrayInitializers : VariableInitializer
@@ -373,24 +320,28 @@ def p_ArrayInitializers(p):
     '''
     if(len(list(p)) == 2):
         p[0] = p[1]
+    elif(len(list(p)) == 4):
+        p[0] = Node("ArrayInitializers",children=[p[1],p[3]])
     else:
-        p[0] = p[1:]
+        p[0] = Node("ArrayInitializers",children=[p[1]])
 
 def p_MethodDeclaration(p):
     '''MethodDeclaration : Modifiers TypeSpecifier MethodDeclarator        MethodBody
     |           TypeSpecifier MethodDeclarator        MethodBody
     '''
     if len(list(p)) == 5:
-        method = flatten(p[3])[0]
-        symbol_table[method]['modifiers'] = flatten(p[1])
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[2])[0]
+        method = (p[3].children)[0]
+        # method = flatten(list(p[3]))[0]
+        # symbol_table[method.name]['modifiers'] = p[1].children
+        # symbol_table[method.name]["valid"] = True
+        # symbol_table[method.name]['dtype'] = (p[2].children)[0]
     else:
-        method =flatten(p[2])[0]
-        symbol_table[method]['modifiers'] = None
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[1])[0]
-    p[0] = p[1:]
+        method = (p[2].children)[0]
+        # method =flatten(list(p[2]))[0]
+        # symbol_table[method]['modifiers'] = None
+        # symbol_table[method]["valid"] = True
+        # symbol_table[method]['dtype'] = (p[1].children)[0]
+    p[0] = Node("MethodDeclaration",children=p[1:])
 
 def p_MethodDeclarator(p):
     '''MethodDeclarator : DeclaratorName '(' ParameterList ')'
@@ -398,57 +349,60 @@ def p_MethodDeclarator(p):
     | MethodDeclarator OP_DIM
     '''
     if len(list(p)) == 5:
-        method = flatten(p[1])[0]
+        method = flatten(list(p[1]))[0]
         symbol_table[method]['params'] = []
-        for param in flatten(p[3]):
+        for param in flatten(list(p[3])):
             if param in symbol_table and param not in symbol_table[method]['params']:
                 if symbol_table[param]['type'] =='identifier':
                     symbol_table[method]['params'].append(param)
-    p[0] = p[1:]
+
+    p[0] = Node("MethodDeclarator",children=[p[1],Node(p[2]),Node(p[3])])
 
 def p_ParameterList(p):
     '''ParameterList : Parameter
     | ParameterList ',' Parameter
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1:]
 
 def p_Parameter(p):
     '''Parameter : TypeSpecifier DeclaratorName
     '''
-    variable = flatten(p[2])[0]
-    symbol_table[variable]['dtype'] = flatten(p[1])[0]
+    variable = flatten(list(p[2]))[0]
+    symbol_table[variable]['dtype'] = flatten(list(p[1]))[0]
     symbol_table[variable]['valid'] = True
-    p[0] = p[1:]
+    p[0] = Node("Params",children=[p[1],p[2]])
 
 def p_DeclaratorName(p):
     '''DeclaratorName : IDENTIFIER
     | DeclaratorName OP_DIM
+    | DeclaratorName '[' NUM_LITERAL ']'
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
 
+    if(len(list(p)) == 2):
+        p[0] = Node(p[1])
+    elif(len(list(p)) == 3):
+        p[0] = Node("[]",children =[p[1]])
+    else:
+        p[0] = Node("[]",children =[p[1],Node(p[3])])
 
 def p_MethodBody(p):
     '''MethodBody : Block
     | ';'
     '''
-    p[0] = p[1]
-
+    if(isinstance(p[1],Node)):
+        p[0] = p[1]
+    else:
+        p[0] = Node(";")
 def p_ConstructorDeclaration(p):
     '''ConstructorDeclaration : Modifiers ConstructorDeclarator        Block
     |           ConstructorDeclarator        Block
     '''
     if len(list(p)) == 4:
-        method = flatten(p[2])[0]
+        method = flatten(list(p[2]))[0]
         symbol_table[method]['modifiers'] = flatten(p[1])
         symbol_table[method]["valid"] = True
     else:
-        method =flatten(p[1])[0]
+        method =flatten(list(p[1]))[0]
         symbol_table[method]['modifiers'] = None
         symbol_table[method]["valid"] = True
     p[0] = p[1:]
@@ -458,9 +412,9 @@ def p_ConstructorDeclarator(p):
     | IDENTIFIER '(' ')'
     '''
     if len(list(p)) == 5:
-        method = flatten(p[1])[0]
+        method = flatten(list(p[1]))[0]
         symbol_table[method]['params'] = []
-        for param in flatten(p[3]):
+        for param in flatten(list(p[3])):
             if param in symbol_table and param not in symbol_table[method]['params']:
                 if symbol_table[param]['type'] =='IDENTIFIER':
                     symbol_table[method]['params'].append(param)
@@ -474,13 +428,16 @@ def p_StaticInitializer(p):
 def p_NonStaticInitializer(p):
     '''NonStaticInitializer : Block
     '''
-    p[0] = p[1]
+    p[0] = p[1:]
 
 def p_Block(p):
     '''Block : '{' LocalVariableDeclarationsAndStatements '}'
     | '{' '}'
     '''
-    p[0] = p[1:]
+    if(len(list(p)) == 4):
+        p[0] = p[2]
+    else:
+        p[0] = Node("Block",children=[Node(p[1]),Node(p[2])])
 
 def p_LocalVariableDeclarationsAndStatements(p):
     '''LocalVariableDeclarationsAndStatements : LocalVariableDeclarationOrStatement
@@ -489,27 +446,24 @@ def p_LocalVariableDeclarationsAndStatements(p):
     if(len(list(p)) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node("LocalVariableDeclarationsAndStatements",children=[p[1],p[2]])
 
 def p_LocalVariableDeclarationOrStatement(p):
     '''LocalVariableDeclarationOrStatement : LocalVariableDeclarationStatement
     | Statement
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1]
 
 def p_LocalVariableDeclarationStatement(p):
     '''LocalVariableDeclarationStatement : TypeSpecifier VariableDeclarators ';'
     '''
-    for variable in flatten(p[2]):
+    for variable in p[2].children:
         if variable in symbol_table:
             symbol_table[variable]['modifiers'] = None
             # symbol_table[variable]['value'] = 6
             symbol_table[variable]['valid'] = True
-            symbol_table[variable]['dtype'] = flatten(p[1])[0]
-    p[0] = p[1:]
+            symbol_table[variable]['dtype'] = ((p[1].children)[0]).name
+    p[0] = Node("LocalVariableDeclarationStatement",children=[p[1],p[2]])
 
 def p_Statement(p):
     '''Statement : EmptyStatement
@@ -518,10 +472,7 @@ def p_Statement(p):
     | JumpStatement
     | Block
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1]
 
 def p_EmptyStatement(p):
     '''EmptyStatement : ';'
@@ -535,69 +486,36 @@ def p_ExpressionStatement(p):
 
 def p_IterationStatement(p):
     '''IterationStatement : DO Statement WHILE '(' Expression ')' ';'
-    | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ForIncr codegen_for_inc ')' Statement codegen_for
-    | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ')' Statement codegen_for
+    | FOR '(' ForInit ForExpr ForIncr ')' Statement
+    | FOR '(' ForInit ForExpr         ')' Statement
     '''
-    p[0] = p[1:]
+    if(p[1] == "do"):
+        p[0] = Node("DO-WHILE",children=[p[5],p[2]])
+    elif(p[1] == "for"):
+        p[0] = Node("FOR",children=[p[3],p[4],p[5],p[7]])
+        
 
-def p_CodegenForInit(p):
-    '''codegen_for_init :'''
-    global lab_num
-    global label
-    for i in range(4): 
-        lab_num+=1
-        label.append(lab_num)
-    print("L"+str(label[-4]),':')
-
-def p_CodegenForExpr(p):
-    '''codegen_for_expr :'''
-    global var_num
-    global label
-    temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1])
-    print('if',temp,'goto L'+str(label[-3]))
-    var_num+=1
-    print('goto L'+str(label[-2]))
-    print('L'+str(label[-1]),':')
-
-def p_CodegenForInc(p):
-    '''codegen_for_inc :'''
-    global label
-    global lab_num
-    print('goto L'+str(label[-4]))
-    print('L'+str(label[-2]),':')
-
-def p_CodegenFor(p):
-    '''codegen_for :'''
-    global label
-    global lab_num
-    print('goto L'+str(label[-1]))
-    print('L'+str(label[-3]),':')
-    for i in range(4): label.pop()
-
-
-
-
-
-    
 def p_ForInit(p):
     '''ForInit : ExpressionStatements ';'
     | LocalVariableDeclarationStatement
     | ';'
     '''
-    if(len(list(p)) == 2):
+    if(len(list(p)) == 3):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
-
+        if(isinstance(p[1],Node)):
+            p[0] = p[1]
+        else:
+            p[0] = Node(p[1])
 def p_ForExpr(p):
     '''ForExpr : Expression ';'
     | ';'
     '''
-    if(len(list(p)) == 2):
+    if(len(list(p)) == 3):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node(p[1])
+
 
 def p_ForIncr(p):
     '''ForIncr : ExpressionStatements '''
@@ -605,12 +523,12 @@ def p_ForIncr(p):
 
 def p_ExpressionStatements(p):
     '''ExpressionStatements : ExpressionStatement
-    | ExpressionStatements ',' ExpressionStatement 
+    | ExpressionStatements ',' ExpressionStatement
     '''
-    if(len(list(p)) == 2):
+    if(len(list(p))==2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node("ExpressionStatements",children=[p[1],p[3]])
 
 def p_JumpStatement(p):
     '''JumpStatement : BREAK IDENTIFIER ';'
@@ -620,10 +538,13 @@ def p_JumpStatement(p):
     | RETURN Expression ';'
     | RETURN            ';'
     '''
-    p[0] = p[1:]
+    if(len(list(p)) == 3):
+        p[0] = Node(p[1],children=[Node([2])])
+    else:
+        p[0] = Node(p[1])
 
 def p_PrimaryExpression(p):
-    '''PrimaryExpression : QualifiedName 
+    '''PrimaryExpression : QualifiedName
     | NotJustName
     '''
     p[0] = p[1]
@@ -642,7 +563,7 @@ def p_ComplexPrimary(p):
     if(len(list(p)) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = p[2]
 
 def p_ComplexPrimaryNoParenthesis(p):
     '''ComplexPrimaryNoParenthesis : LITERAL
@@ -652,23 +573,23 @@ def p_ComplexPrimaryNoParenthesis(p):
     | FieldAccess
     | MethodCall
     '''
-    term = flatten(p[1])[0]
+    term = p[1]
     if term == "true":
-        p[0] = True
+        p[0] = Node("True")
     elif term == "false":
-        p[0] = False
+        p[0] = Node("False")
     elif type(term) == str or type(term) == int or type(term) == float:
-        p[0] = p[1]
+        p[0] = Node(p[1])
     else:
         p[0] = p[1]
 
-    
+
 
 def p_ArrayAccess(p):
     '''ArrayAccess : QualifiedName '[' Expression ']'
     | ComplexPrimary '[' Expression ']'
     '''
-    p[0] = p[1:]
+    p[0] = Node("[]",children=[p[1],p[3]])
 
 def p_FieldAccess(p):
     '''FieldAccess : NotJustName '.' IDENTIFIER
@@ -683,7 +604,9 @@ def p_MethodCall(p):
     '''MethodCall : MethodAccess '(' ArgumentList ')'
     | MethodAccess '(' ')'
     '''
-    p[0] = p[1:]
+    if(len(list(p)) == 5):
+        p[0] = Node("MethodCall",children=[p[1],p[3]])
+        # p[0] = Node(p[1:])
 
 def p_MethodAccess(p):
     '''MethodAccess : ComplexPrimaryNoParenthesis
@@ -695,7 +618,7 @@ def p_MethodAccess(p):
 def p_SpecialName(p):
     '''SpecialName : THIS
     '''
-    p[0] = p[1]
+    p[0] = Node(p[1])
 
 def p_ArgumentList(p):
     '''ArgumentList : Expression
@@ -704,16 +627,13 @@ def p_ArgumentList(p):
     if(len(list(p)) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node("ArgList",children = [p[1],p[3]])
 
 def p_NewAllocationExpression(p):
     '''NewAllocationExpression : PlainNewAllocationExpression
         | QualifiedName '.' PlainNewAllocationExpression
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1:]
 
 def p_PlainNewAllocationExpression(p):
     '''PlainNewAllocationExpression : ArrayAllocationExpression
@@ -723,10 +643,7 @@ def p_PlainNewAllocationExpression(p):
         | ArrayAllocationExpression '{' ArrayInitializers '}'
         | ClassAllocationExpression '{' FieldDeclarations '}'
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1:]
 
 def p_ClassAllocationExpression(p):
     '''ClassAllocationExpression : NEW TypeName '(' ArgumentList ')'
@@ -748,21 +665,21 @@ def p_DimExprs(p):
     if(len(list(p)) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = Node("DimExprs",children=[p[1],p[2]])
 
 def p_DimExpr(p):
     '''DimExpr : '[' Expression ']'
     '''
-    p[0] = p[1:]
+    p[0] = p[2]
 
 def p_Dims(p):
     '''Dims : OP_DIM
     | Dims OP_DIM
     '''
     if(len(list(p)) == 2):
-        p[0] = p[1]
+        p[0] = Node("Dims")
     else:
-        p[0] = p[1:]
+        p[0] = Node("Dims",children = p[2])
 
 def p_PostfixExpression(p):
     '''PostfixExpression : PrimaryExpression
@@ -771,14 +688,21 @@ def p_PostfixExpression(p):
     p[0] = p[1]
 
 def p_RealPostfixExpression(p):
-    '''RealPostfixExpression : PostfixExpression OP_INC codegen_postfix
-    | PostfixExpression OP_DEC codegen_postfix
+    '''RealPostfixExpression : PostfixExpression OP_INC
+    | PostfixExpression OP_DEC
     '''
-    p[0] = p[1]
+    p[0] = Node("+=",children=[p[1],Node("1")])
+    # variable = flatten(p[1])[0]
+    # p[0] = retrieve(variable)
+    # if p[2]=='++':
+    #     p[0] += 1
+    # elif p[2]=='--':
+    #     p[0] -=1
+    # symbol_table[variable]['value'] = p[0]
 
 def p_UnaryExpression(p):
-    '''UnaryExpression : OP_INC UnaryExpression codegen_prefix
-    | OP_DEC UnaryExpression codegen_prefix
+    '''UnaryExpression : OP_INC UnaryExpression
+    | OP_DEC UnaryExpression
     | ArithmeticUnaryOperator CastExpression
     | LogicalUnaryExpression
     '''
@@ -793,10 +717,8 @@ def p_UnaryExpression(p):
             symbol_table[variable]['value'] = p[0]
         elif p[1] == '-':
             p[0] = -flatten(p[2])[0]
-    elif(len(list(p)) == 2):
-        p[0] = p[1]
     else:
-        p[0] = p[1:]
+        p[0] = p[1]
 
 
 
@@ -807,9 +729,9 @@ def p_LogicalUnaryExpression(p):
     if len(list(p)) == 3:
         operator = p[1]
         if operator == "!":
-            p[0] = not(flatten(p[2])[0])
+            p[0] = not(p[2].name)
         elif operator == "~":
-            p[0] = ~(flatten(p[2])[0])
+            p[0] = ~(p[2].name)
     else:
         p[0] = p[1]
 
@@ -826,24 +748,18 @@ def p_ArithmeticUnaryOperator(p):
     p[0] = p[1]
 
 def p_CastExpression(p):
-    '''CastExpression : UnaryExpression push
+    '''CastExpression : UnaryExpression
     | '(' PrimitiveTypeExpression ')' CastExpression
     | '(' ClassTypeExpression ')' CastExpression
     | '(' Expression ')' LogicalUnaryExpression
     '''
-    if(len(list(p)) == 3):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1]
 
 def p_PrimitiveTypeExpression(p):
     '''PrimitiveTypeExpression : PrimitiveType
-        | PrimitiveType Dims
+    | PrimitiveType Dims
     '''
-    if(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+    p[0] = p[1:]
 
 def p_ClassTypeExpression(p):
     '''ClassTypeExpression : QualifiedName Dims
@@ -851,93 +767,134 @@ def p_ClassTypeExpression(p):
     p[0] = p[1:]
 
 def p_MultiplicativeExpression(p):
-    '''MultiplicativeExpression : CastExpression 
-    | MultiplicativeExpression '*' push  CastExpression codegen_binop
-    | MultiplicativeExpression '/' push CastExpression codegen_binop
-    | MultiplicativeExpression '%' push CastExpression codegen_binop
+    '''MultiplicativeExpression : CastExpression
+    | MultiplicativeExpression '*' CastExpression
+    | MultiplicativeExpression '/' CastExpression
+    | MultiplicativeExpression '%' CastExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1 = retrieve(p[1].name)
+        t2 = retrieve(p[3].name)
+        if p[2]=='*':
+            p[0] = Node("*",children=[p[1],p[3]])
+        elif p[2]=='/':
+            p[0] = Node("/",children=[p[1],p[3]])
+        elif p[2]=='%':
+            p[0] = Node("%",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
 # Need to add string case.
 def p_AdditiveExpression(p):
     '''AdditiveExpression : MultiplicativeExpression
-    | AdditiveExpression '+' push MultiplicativeExpression codegen_binop
-    | AdditiveExpression '-' push MultiplicativeExpression codegen_binop
+    | AdditiveExpression '+' MultiplicativeExpression
+    | AdditiveExpression '-' MultiplicativeExpression
     '''
-    #search
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1 = retrieve(p[1].name)
+        t2 = retrieve(p[3].name)
+        if p[2]=='+':
+            p[0] = Node("+",children=[p[1],p[3]])
+        elif p[2]=='-':
+            p[0] = Node("-",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
 def p_RelationalExpression(p):
     '''RelationalExpression : AdditiveExpression
-    | RelationalExpression '<' push AdditiveExpression codegen_binop
-    | RelationalExpression '>' push AdditiveExpression codegen_binop
-    | RelationalExpression OP_LE push AdditiveExpression codegen_binop
-    | RelationalExpression OP_GE push AdditiveExpression codegen_binop
+    | RelationalExpression '<' AdditiveExpression
+    | RelationalExpression '>' AdditiveExpression
+    | RelationalExpression OP_LE AdditiveExpression
+    | RelationalExpression OP_GE AdditiveExpression
     '''
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
 
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+        if p[2]=='<':
+            p[0] = Node("<",children=[p[1],p[3]])
+        elif p[2]=='>':
+            p[0] = Node(">",children=[p[1],p[3]])
+        elif p[2]=='<=':
+            p[0] = Node("<=",children=[p[1],p[3]])
+        elif p[2]=='>=':
+            p[0] = Node(">=",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
 def p_EqualityExpression(p):
     '''EqualityExpression : RelationalExpression
-        | EqualityExpression OP_EQ push RelationalExpression codegen_binop
-        | EqualityExpression OP_NE push RelationalExpression codegen_binop
+        | EqualityExpression OP_EQ RelationalExpression
+        | EqualityExpression OP_NE RelationalExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+
+        if p[2]=='==':
+            p[0] = Node("==",children=[p[1],p[3]])
+        elif p[2]=='!=':
+            p[0] = Node("!=",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
 def p_AndExpression(p):
     '''AndExpression : EqualityExpression
-        | AndExpression '&' push EqualityExpression codegen_binop
+        | AndExpression '&' EqualityExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+        p[0] = Node("&",children=[p[1],p[3]])
+
     else:
         p[0] = p[1]
 
 def p_ExclusiveOrExpression(p):
     '''ExclusiveOrExpression : AndExpression
-    | ExclusiveOrExpression '^' push AndExpression codegen_binop
+    | ExclusiveOrExpression '^' AndExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+        p[0] = Node("^",children=[p[1],p[3]])
+
     else:
         p[0] = p[1]
 
 def p_InclusiveOrExpression(p):
     '''InclusiveOrExpression : ExclusiveOrExpression
-    | InclusiveOrExpression '|' push ExclusiveOrExpression codegen_binop
+    | InclusiveOrExpression '|' ExclusiveOrExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+        p[0] = Node("|",children=[p[1],p[3]])
+
     else:
         p[0] = p[1]
 
 def p_ConditionalAndExpression(p):
     '''ConditionalAndExpression : InclusiveOrExpression
-    | ConditionalAndExpression OP_LAND push InclusiveOrExpression codegen_binop
+    | ConditionalAndExpression OP_LAND InclusiveOrExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+
+        p[0] = Node("&&",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
 def p_ConditionalOrExpression(p):
     '''ConditionalOrExpression : ConditionalAndExpression
-    | ConditionalOrExpression OP_LOR push ConditionalAndExpression codegen_binop
+    | ConditionalOrExpression OP_LOR ConditionalAndExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        # t1 = retrieve(flatten(p[1])[0])
+        # t2 = retrieve(flatten(p[3])[0])
+
+        p[0] = Node("||",children=[p[1],p[3]])
     else:
         p[0] = p[1]
 
@@ -952,18 +909,36 @@ def p_ConditionalExpression(p):
 
 def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
-    | UnaryExpression push '=' ConditionalExpression codegen_assign
-    | UnaryExpression push  AssignmentOperator push AssignmentExpression codegen_shorthand
+    | UnaryExpression AssignmentOperator AssignmentExpression
     '''
-    if len(list(p)) == 6:
-        p[0] = p[1:2]+p[3:5]
-    elif len(list(p)) == 7:
-        p[0] = p[1:2] + p[3:4] + p[5:6]
+    if len(list(p)) == 4:
+        variable = p[1].name
+        p[0] = Node(p[2],children=[p[1],p[3]])
+        # p[0] = retrieve(variable)
+        # # rhs = retrieve((p[3].children)[0])
+        # if p[2] == '=':
+        #     p[0] = rhs
+        # elif p[2][0]=='+=':
+        #     p[0] += rhs
+        # elif p[2][0]=='-=':
+        #     p[0] -= rhs
+        # elif p[2][0]=='*=':
+        #     p[0] *= rhs
+        # elif p[2][0]=='/=':
+        #     p[0] /= rhs
+        # elif p[2][0]=='%=':
+        #     p[0] %= rhs
+        # elif p[2][0]=='&=':
+        #     p[0] &= rhs
+        # elif p[2][0]=='|=':
+        #     p[0] |= rhs
+        # symbol_table[variable]['value'] = p[0]
     else:
         p[0] = p[1]
 
 def p_AssignmentOperator(p):
-    '''AssignmentOperator : ASS_MUL
+    '''AssignmentOperator : '='
+    | ASS_MUL
     | ASS_DIV
     | ASS_MOD
     | ASS_ADD
@@ -972,10 +947,12 @@ def p_AssignmentOperator(p):
     | ASS_OR
     '''
     p[0] = p[1]
-    
+
 
 
 def p_Expression(p):
     '''Expression : AssignmentExpression
     '''
     p[0] = p[1]
+
+

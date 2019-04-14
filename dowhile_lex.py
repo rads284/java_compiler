@@ -19,6 +19,18 @@ for kw in keywords:
     symbol_table[kw]['type'] = "keyword"
 
 # Tokens
+
+def t_MCOMMENT(t):
+    r'/\*(.|\n)*?\*/'
+    t.lineno += t.value.count('\n')
+def t_SCOMMENT(t):
+    r'(?://[^\n]*|/\*(?:(?!\*/).)*\*/)'
+    t.lineno += t.value.count('\n')
+# def t_COMMENT(t) :
+#     r'\/\*(\\.|[^\\"])*\*\/'
+#     t.type = "COMMENT"
+#     return t
+
 def t_OP_INC(t) :
  r"\+\+"
  t.type = "OP_INC"
@@ -86,8 +98,6 @@ def t_ASS_SUB(t) :
 
 t_LITERAL  = r'\"(\\.|[^\\"])*\"'
 
-def t_COMMENT(t) :
-    r'\/\*\*(\\.|[^\\"])*\*\/'
 
 # t_BOOLLIT  = r'"true"|"false"'
 # def t_BOOLLIT(t) :
@@ -97,7 +107,11 @@ def t_COMMENT(t) :
 
 literals = [';', '.', ',', '+', '-', '*', '/','~',
             '%','<', '>', '!', '&', '|','^',
-            '(', ')', '{', '}', '=']
+            '(', ')', '{', '}', '=','[',']']
+def t_OP_DIM(t):
+    r"\[[ |\t]*\]"
+    t.type = "OP_DIM"
+    return t
 
 def t_IDENTIFIER(t):
     r"[A-Za-z$_][A-Za-z$_0-9]*"
@@ -196,8 +210,19 @@ def t_NUM_LITERAL(t):
     t.value = int(t.value)
     return t
 
+# def t_lsquare(t):
+#     r'\['
+#     t.type = '['
+#     return t
+
+# def t_rsquare(t):
+#     r'\]'
+#     t.type = ']'
+#     return t
+
+
 # Ignored characters
-t_OP_DIM = r"\[{ |\t}*\]"
+# t_OP_DIM = r"\[{ |\t}*\]"
 t_ignore = " \t"
 
 def t_newline(t):

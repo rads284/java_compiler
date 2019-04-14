@@ -1,0 +1,25 @@
+from operator import itemgetter
+
+from dowhile_lex import *
+from dowhile_yacc import *
+
+import sys
+import ply.lex as lex
+import ply.yacc as yacc
+lex.lex(debug=0)
+parser = yacc.yacc(debug=0)
+
+with open('test.java','r') as f:
+    input_str = f.read()
+
+# print("\n\n\n==========Tokens Generated============")
+# lex.input(input_str)
+#  # Tokenize
+# while True:
+#  tok = lex.token()
+#  if not tok:
+#      break      # No more input
+#  # print(tok)
+
+x = parser.parse(input_str)
+
