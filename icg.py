@@ -544,43 +544,36 @@ def p_CodegenForInit(p):
     '''codegen_for_init :'''
     global lab_num
     global label
-    lab_num+=1
-    label.append(lab_num)
-    print("L"+str(lab_num),':',label)
-    lab_num+=1
+    for i in range(4): 
+        lab_num+=1
+        label.append(lab_num)
+    print("L"+str(label[-4]),':')
 
 def p_CodegenForExpr(p):
     '''codegen_for_expr :'''
     global var_num
     global label
-    global lab_num
     temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1],label)
-    print('if',temp,'goto L'+str(lab_num),label)
+    print(temp,' = not', stack[-1])
+    print('if',temp,'goto L'+str(label[-3]))
     var_num+=1
-    label.append(lab_num)
-    lab_num+=1
-    print('goto L'+str(lab_num),label)
-    label.append(lab_num)
-    lab_num+=1
-    print('L'+str(lab_num),':',label)
+    print('goto L'+str(label[-2]))
+    print('L'+str(label[-1]),':')
 
 def p_CodegenForInc(p):
     '''codegen_for_inc :'''
     global label
     global lab_num
-    x = label.pop()
-    print('goto L'+str(label[-2]),label)
-    label.append(lab_num)
-    print('L'+str(x),':',label)
+    print('goto L'+str(label[-4]))
+    print('L'+str(label[-2]),':')
 
 def p_CodegenFor(p):
     '''codegen_for :'''
     global label
     global lab_num
-    x = label.pop()
-    print('goto L'+str(lab_num),label)
-    print('L'+str(x),':',label)
+    print('goto L'+str(label[-1]))
+    print('L'+str(label[-3]),':')
+    for i in range(4): label.pop()
 
 
 
@@ -962,11 +955,9 @@ def p_AssignmentExpression(p):
     | UnaryExpression push '=' ConditionalExpression codegen_assign
     | UnaryExpression push  AssignmentOperator push AssignmentExpression codegen_shorthand
     '''
-    # print('assign',len(list(p)),p[:])
     if len(list(p)) == 6:
         p[0] = p[1:2]+p[3:5]
     elif len(list(p)) == 7:
-            # print('in')
         p[0] = p[1:2] + p[3:4] + p[5:6]
     else:
         p[0] = p[1]
