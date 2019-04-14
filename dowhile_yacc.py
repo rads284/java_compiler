@@ -897,7 +897,7 @@ def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
     | UnaryExpression AssignmentOperator AssignmentExpression
     '''
-    print(p[:])
+    print('abc',p[:])
     if len(list(p)) == 4:
         variable = flatten(p[1])[0]
         p[0] = retrieve(variable)

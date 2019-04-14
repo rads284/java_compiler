@@ -63,7 +63,8 @@ def format_as_table(data,
 
 
 from dowhile_lex import *
-from dowhile_yacc import *
+# from dowhile_yacc import *
+from icg import *
 
 import sys
 import ply.lex as lex
@@ -93,6 +94,7 @@ for symbol in symbol_table:
     	if(symbol_table[symbol]["type"] == "identifier" and symbol_table[symbol]["valid"] == True):
         	print(symbol,"\t",symbol_table[symbol])
 
+print(stack)
 
 # from sklearn import tree
 # import collections
