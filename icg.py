@@ -534,11 +534,32 @@ def p_ExpressionStatement(p):
     p[0] = p[1]
 
 def p_IterationStatement(p):
-    '''IterationStatement : DO Statement WHILE '(' Expression ')' ';'
+    '''IterationStatement : DO codegen_do_init Statement  WHILE '(' Expression ')' ';' codegen_do_final
     | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ForIncr codegen_for_inc ')' Statement codegen_for
     | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ')' Statement codegen_for
     '''
     p[0] = p[1:]
+
+def p_CodegenDoInit(p):
+    '''codegen_do_init : '''
+    global lab_num
+    global label
+    for i in range(2): 
+        lab_num+=1
+        label.append(lab_num)
+    print("L"+str(label[-2]),':')  
+
+def p_CodegenDoFinal(p):
+    '''codegen_do_final : '''
+    global stack
+    global label
+    global var_num
+    temp = 't'+str(var_num)
+    print(temp,' = not', stack[-1])
+    print('if',temp,'goto L'+str(label[-1]))
+    var_num+=1
+    print('goto L'+str(label[-2]))
+    print('L'+str(label[-1]),':')
 
 def p_CodegenForInit(p):
     '''codegen_for_init :'''
