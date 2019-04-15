@@ -1,4 +1,5 @@
 from dowhile_lex import symbol_table,keywords
+
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -14,19 +15,19 @@ def flatten(l):
     return output
 
 def retrieve(t):
-    if t in symbol_table:
-        if symbol_table[t]['valid']:
-            t = symbol_table[t]['value']
-        else:
-            print("error line:",symbol_table[t]["token"],"   rhs = ", t)
-    return t
+    flg = False
+    for a in reversed(stack):
+        if (t,a) in symbol_table:
+            if symbol_table[(t,a)]['valid']:
+                t = symbol_table[(t,a)]['value']
+                return (t,a)
+            else:
+                flg=True
+    if flg:
+        print("error",t,a,(t,a)in symbol_table)
+    return (t,0)
 
-
-stack = []
-label = []
-var_num = 0
-lab_num = -1
-
+stack = [0]
 tokens = [
 "BOOLEAN", "BREAK", "BYTE",
 "CHAR", "CLASS", "CONTINUE",
@@ -66,72 +67,6 @@ start = 'CompilationUnit'
 #     'OP_DIM :'
 #     pass
 
-
-def p_CodegenPrefix(p):
-    '''codegen_prefix :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , flatten(p[-1])[0], flatten(p[-2])[0][0], 1 )
-    print(flatten(p[-1])[0], ' = ', cur_var)
-    
-    var_num+=1
-
-def p_CodegenPostfix(p):
-    '''codegen_postfix :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , flatten(p[-2])[0], flatten(p[-1])[0][0], 1 )
-    print(flatten(p[-2])[0], ' = ', cur_var)
-    
-    var_num+=1
-
-def p_CodegenShorthand(p):
-    '''codegen_shorthand :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-
-    print(cur_var, ' = ' , stack[-3], stack[-2][0], stack[-1] )
-    print(stack[-3], ' = ', cur_var)
-    stack.pop()
-    stack.pop()
-    stack.pop()
-    
-    var_num+=1
-
-def p_CodegenDeclarator(p):
-    '''codegen_declarator :'''
-    print(stack[-2],' = ',stack[-1])
-    stack.pop()
-    stack.pop()
-
-def p_Push(p):
-    '''push :'''
-    # print(stack,'ancd',p[-1],'abc',p[:])
-    if len(stack) == 0 and flatten(p[-2])[0] not in symbol_table:
-        stack.append(flatten(p[-2])[0])
-    stack.append(flatten(p[-1])[0])
-
-def p_CodegenBinop(p):
-    '''codegen_binop :'''
-    global var_num
-    cur_var = "t"+str(var_num)
-    print(cur_var," = ", stack[-3],stack[-2],stack[-1])
-    stack.pop()
-    stack.pop()
-    stack.pop()
-    stack.append(cur_var)
-    var_num+=1
-
-def p_CodegenAssign(p):
-    '''codegen_assign :'''
-    global var_num
-    print(stack[-2],' = ',stack[-1])
-    stack.pop()
-    stack.pop()
-
-
 def p_error(p):
 
     # get formatted representation of stack
@@ -146,7 +81,7 @@ def p_TypeSpecifier(p):
     '''TypeSpecifier : TypeName
     | TypeName Dims
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -174,7 +109,7 @@ def p_SemiColons(p):
     '''SemiColons : ';'
     | SemiColons ';'
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -193,7 +128,7 @@ def p_ProgramFile(p):
     |                  ImportStatements
     |                                   TypeDeclarations
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -207,7 +142,7 @@ def p_TypeDeclarations(p):
     '''TypeDeclarations : TypeDeclarationOptSemi
     | TypeDeclarations TypeDeclarationOptSemi
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -222,7 +157,7 @@ def p_ImportStatements(p):
     '''ImportStatements : ImportStatement
     | ImportStatements ImportStatement
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -237,14 +172,14 @@ def p_QualifiedName(p):
     '''QualifiedName : IDENTIFIER
     | QualifiedName '.' IDENTIFIER
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
 
 def p_TypeDeclaration(p):
-    '''TypeDeclaration : ClassHeader '{' FieldDeclarations '}'
-    | ClassHeader '{' '}'
+    '''TypeDeclaration : ClassHeader '{' push FieldDeclarations '}' pop
+    | ClassHeader '{' push '}' pop
     '''
     p[0] = p[1:]
 
@@ -253,18 +188,18 @@ def p_ClassHeader(p):
     |           ClassWord IDENTIFIER
     '''
     if len(list(p))==4:
-        symbol_table[p[3]]['modifiers'] = flatten(p[1])
+        symbol_table[(p[3],scopenum)]['modifiers'] = flatten(p[1])
     else:
-        symbol_table[p[2]]['modifiers'] = None
-    symbol_table[flatten(list(p))[-1]]["valid"] = True
-    symbol_table[flatten(list(p))[-1]]["dtype"] = "class"
+        symbol_table[(p[2],scopenum)]['modifiers'] = None
+    symbol_table[(flatten(list(p))[-1],scopenum)]["valid"] = True
+    symbol_table[(flatten(list(p))[-1],scopenum)]["dtype"] = "class"
     p[0] = p[1:]
 
 def p_Modifiers(p):
     '''Modifiers : Modifier
     | Modifiers Modifier
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -285,7 +220,7 @@ def p_FieldDeclarations(p):
     '''FieldDeclarations : FieldDeclarationOptSemi
         | FieldDeclarations FieldDeclarationOptSemi
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -294,7 +229,7 @@ def p_FieldDeclarationOptSemi(p):
     '''FieldDeclarationOptSemi : FieldDeclaration
         | FieldDeclaration SemiColons
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -307,7 +242,7 @@ def p_FieldDeclaration(p):
     | NonStaticInitializer
     | TypeDeclaration
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -318,19 +253,19 @@ def p_FieldVariableDeclaration(p):
     '''
     if len(list(p))==4:
         for variable in flatten(p[3]):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = flatten(p[1])
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[2])[0]
+            if (variable,scopenum) in symbol_table:
+                symbol_table[(variable,scopenum)]['modifiers'] = flatten(p[1])
+                symbol_table[(variable,scopenum)]['value'] = 'None'
+                symbol_table[(variable,scopenum)]["valid"] = True
+                symbol_table[(variable,scopenum)]['dtype'] = flatten(p[2])[0]
                 # symbol_table[(variable,True)]['global'] = True
     else:
         for variable in flatten(p[2]):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = None
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[1])[0]
+            if (variable,scopenum) in symbol_table:
+                symbol_table[(variable,scopenum)]['modifiers'] = None
+                symbol_table[(variable,scopenum)]['value'] = 'None'
+                symbol_table[(variable,scopenum)]["valid"] = True
+                symbol_table[(variable,scopenum)]['dtype'] = flatten(p[1])[0]
                 # symbol_table[(variable,True)]['global'] = True
 
     p[0] = p[1:]
@@ -339,29 +274,29 @@ def p_VariableDeclarators(p):
     '''VariableDeclarators : VariableDeclarator
     | VariableDeclarators ',' VariableDeclarator
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
 
 def p_VariableDeclarator(p):
     '''VariableDeclarator : DeclaratorName
-    | DeclaratorName push '=' VariableInitializer codegen_declarator
+    | DeclaratorName '=' VariableInitializer
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
-        p[0] = p[1:2]+p[3:5]
-    if len(list(p))==5:
+        p[0] = p[1:]
+    if len(list(p))==4:
         variable = flatten(p[1])[0]
-        symbol_table[variable]['value'] = flatten(p[3])[0]#int
+        symbol_table[(variable,scopenum)]['value'] = flatten(p[3])[0]#int
 
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
-    | '{' '}'
-        | '{' ArrayInitializers '}'
+    | '{' push '}' pop
+        | '{' push ArrayInitializers '}' pop
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -371,7 +306,7 @@ def p_ArrayInitializers(p):
     | ArrayInitializers ',' VariableInitializer
     | ArrayInitializers ','
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -380,16 +315,17 @@ def p_MethodDeclaration(p):
     '''MethodDeclaration : Modifiers TypeSpecifier MethodDeclarator        MethodBody
     |           TypeSpecifier MethodDeclarator        MethodBody
     '''
+
     if len(list(p)) == 5:
         method = flatten(p[3])[0]
-        symbol_table[method]['modifiers'] = flatten(p[1])
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[2])[0]
+        symbol_table[(method,stack[-1])]['modifiers'] = flatten(p[1])
+        symbol_table[(method,stack[-1])]["valid"] = True
+        symbol_table[(method,stack[-1])]['dtype'] = flatten(p[2])[0]
     else:
         method =flatten(p[2])[0]
-        symbol_table[method]['modifiers'] = None
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[1])[0]
+        symbol_table[(method,stack[-1])]['modifiers'] = None
+        symbol_table[(method,stack[-1])]["valid"] = True
+        symbol_table[(method,stack[-1])]['dtype'] = flatten(p[1])[0]
     p[0] = p[1:]
 
 def p_MethodDeclarator(p):
@@ -399,18 +335,18 @@ def p_MethodDeclarator(p):
     '''
     if len(list(p)) == 5:
         method = flatten(p[1])[0]
-        symbol_table[method]['params'] = []
+        symbol_table[(method,scopenum)]['params'] = []
         for param in flatten(p[3]):
-            if param in symbol_table and param not in symbol_table[method]['params']:
-                if symbol_table[param]['type'] =='identifier':
-                    symbol_table[method]['params'].append(param)
+            if (param,scopenum) in symbol_table and param not in symbol_table[(method,scopenum)]['params']:
+                if symbol_table[(param,scopenum)]['type'] =='identifier':
+                    symbol_table[(method,scopenum)]['params'].append(param)
     p[0] = p[1:]
 
 def p_ParameterList(p):
     '''ParameterList : Parameter
     | ParameterList ',' Parameter
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -419,15 +355,16 @@ def p_Parameter(p):
     '''Parameter : TypeSpecifier DeclaratorName
     '''
     variable = flatten(p[2])[0]
-    symbol_table[variable]['dtype'] = flatten(p[1])[0]
-    symbol_table[variable]['valid'] = True
+    if variable not in keywords:
+        symbol_table[(variable,scopenum)]['dtype'] = flatten(p[1])[0]
+        symbol_table[(variable,scopenum)]['valid'] = True
     p[0] = p[1:]
 
 def p_DeclaratorName(p):
     '''DeclaratorName : IDENTIFIER
     | DeclaratorName OP_DIM
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -445,12 +382,12 @@ def p_ConstructorDeclaration(p):
     '''
     if len(list(p)) == 4:
         method = flatten(p[2])[0]
-        symbol_table[method]['modifiers'] = flatten(p[1])
-        symbol_table[method]["valid"] = True
+        symbol_table[(method,scopenum)]['modifiers'] = flatten(p[1])
+        symbol_table[(method,scopenum)]["valid"] = True
     else:
         method =flatten(p[1])[0]
-        symbol_table[method]['modifiers'] = None
-        symbol_table[method]["valid"] = True
+        symbol_table[(method,scopenum)]['modifiers'] = None
+        symbol_table[(method,scopenum)]["valid"] = True
     p[0] = p[1:]
 
 def p_ConstructorDeclarator(p):
@@ -459,11 +396,11 @@ def p_ConstructorDeclarator(p):
     '''
     if len(list(p)) == 5:
         method = flatten(p[1])[0]
-        symbol_table[method]['params'] = []
+        symbol_table[(method,scopenum)]['params'] = []
         for param in flatten(p[3]):
-            if param in symbol_table and param not in symbol_table[method]['params']:
-                if symbol_table[param]['type'] =='IDENTIFIER':
-                    symbol_table[method]['params'].append(param)
+            if (param,scopenum) in symbol_table and param not in symbol_table[(method,scopenum)]['params']:
+                if symbol_table[(param,scopenum)]['type'] =='IDENTIFIER':
+                    symbol_table[(method,scopenum)]['params'].append(param)
     p[0] = p[1:]
 
 def p_StaticInitializer(p):
@@ -477,16 +414,31 @@ def p_NonStaticInitializer(p):
     p[0] = p[1]
 
 def p_Block(p):
-    '''Block : '{' LocalVariableDeclarationsAndStatements '}'
-    | '{' '}'
+    '''Block : '{' push LocalVariableDeclarationsAndStatements '}' pop
+    | '{' push '}' pop
     '''
     p[0] = p[1:]
+
+scopenum=0
+
+def p_push(p):
+    '''push :'''
+    global scopenum
+    # scopenum+=1
+    scopenum+=1
+    stack.append(scopenum)
+
+
+
+def p_pop(p):
+    '''pop :'''
+    stack.pop()
 
 def p_LocalVariableDeclarationsAndStatements(p):
     '''LocalVariableDeclarationsAndStatements : LocalVariableDeclarationOrStatement
     | LocalVariableDeclarationsAndStatements LocalVariableDeclarationOrStatement
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -495,7 +447,7 @@ def p_LocalVariableDeclarationOrStatement(p):
     '''LocalVariableDeclarationOrStatement : LocalVariableDeclarationStatement
     | Statement
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -503,12 +455,14 @@ def p_LocalVariableDeclarationOrStatement(p):
 def p_LocalVariableDeclarationStatement(p):
     '''LocalVariableDeclarationStatement : TypeSpecifier VariableDeclarators ';'
     '''
+    global scopenum
+
     for variable in flatten(p[2]):
-        if variable in symbol_table:
-            symbol_table[variable]['modifiers'] = None
-            # symbol_table[variable]['value'] = 6
-            symbol_table[variable]['valid'] = True
-            symbol_table[variable]['dtype'] = flatten(p[1])[0]
+        if (variable,scopenum) in symbol_table:
+            symbol_table[(variable,scopenum)]['modifiers'] = None
+            symbol_table[(variable,scopenum)]['scope'] = "s"+str(scopenum)
+            symbol_table[(variable,scopenum)]['valid'] = True
+            symbol_table[(variable,scopenum)]['dtype'] = flatten(p[1])[0]
     p[0] = p[1:]
 
 def p_Statement(p):
@@ -518,7 +472,7 @@ def p_Statement(p):
     | JumpStatement
     | Block
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -534,79 +488,18 @@ def p_ExpressionStatement(p):
     p[0] = p[1]
 
 def p_IterationStatement(p):
-    '''IterationStatement : DO codegen_do_init Statement  WHILE '(' Expression ')' ';' codegen_do_final
-    | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ForIncr codegen_for_inc ')' Statement codegen_for
-    | FOR '(' ForInit codegen_for_init ForExpr codegen_for_expr ')' Statement codegen_for
+    '''IterationStatement : DO Statement WHILE '(' Expression ')' ';'
+    | FOR '(' ForInit ForExpr ForIncr ')' Statement
+    | FOR '(' ForInit ForExpr         ')' Statement
     '''
     p[0] = p[1:]
 
-def p_CodegenDoInit(p):
-    '''codegen_do_init : '''
-    global lab_num
-    global label
-    for i in range(2): 
-        lab_num+=1
-        label.append(lab_num)
-    print("L"+str(label[-2]),':')  
-
-def p_CodegenDoFinal(p):
-    '''codegen_do_final : '''
-    global stack
-    global label
-    global var_num
-    temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1])
-    print('if',temp,'goto L'+str(label[-1]))
-    var_num+=1
-    print('goto L'+str(label[-2]))
-    print('L'+str(label[-1]),':')
-
-def p_CodegenForInit(p):
-    '''codegen_for_init :'''
-    global lab_num
-    global label
-    for i in range(4): 
-        lab_num+=1
-        label.append(lab_num)
-    print("L"+str(label[-4]),':')
-
-def p_CodegenForExpr(p):
-    '''codegen_for_expr :'''
-    global var_num
-    global label
-    temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1])
-    print('if',temp,'goto L'+str(label[-3]))
-    var_num+=1
-    print('goto L'+str(label[-2]))
-    print('L'+str(label[-1]),':')
-
-def p_CodegenForInc(p):
-    '''codegen_for_inc :'''
-    global label
-    global lab_num
-    print('goto L'+str(label[-4]))
-    print('L'+str(label[-2]),':')
-
-def p_CodegenFor(p):
-    '''codegen_for :'''
-    global label
-    global lab_num
-    print('goto L'+str(label[-1]))
-    print('L'+str(label[-3]),':')
-    for i in range(4): label.pop()
-
-
-
-
-
-    
 def p_ForInit(p):
     '''ForInit : ExpressionStatements ';'
     | LocalVariableDeclarationStatement
     | ';'
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -615,7 +508,7 @@ def p_ForExpr(p):
     '''ForExpr : Expression ';'
     | ';'
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -626,9 +519,9 @@ def p_ForIncr(p):
 
 def p_ExpressionStatements(p):
     '''ExpressionStatements : ExpressionStatement
-    | ExpressionStatements ',' ExpressionStatement 
+    | ExpressionStatements ',' ExpressionStatement
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -644,7 +537,7 @@ def p_JumpStatement(p):
     p[0] = p[1:]
 
 def p_PrimaryExpression(p):
-    '''PrimaryExpression : QualifiedName 
+    '''PrimaryExpression : QualifiedName
     | NotJustName
     '''
     p[0] = p[1]
@@ -660,7 +553,7 @@ def p_ComplexPrimary(p):
     '''ComplexPrimary : '(' Expression ')'
     | ComplexPrimaryNoParenthesis
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -683,7 +576,7 @@ def p_ComplexPrimaryNoParenthesis(p):
     else:
         p[0] = p[1]
 
-    
+
 
 def p_ArrayAccess(p):
     '''ArrayAccess : QualifiedName '[' Expression ']'
@@ -722,7 +615,7 @@ def p_ArgumentList(p):
     '''ArgumentList : Expression
     | ArgumentList ',' Expression
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -731,7 +624,7 @@ def p_NewAllocationExpression(p):
     '''NewAllocationExpression : PlainNewAllocationExpression
         | QualifiedName '.' PlainNewAllocationExpression
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -739,12 +632,12 @@ def p_NewAllocationExpression(p):
 def p_PlainNewAllocationExpression(p):
     '''PlainNewAllocationExpression : ArrayAllocationExpression
         | ClassAllocationExpression
-        | ArrayAllocationExpression '{' '}'
-        | ClassAllocationExpression '{' '}'
-        | ArrayAllocationExpression '{' ArrayInitializers '}'
-        | ClassAllocationExpression '{' FieldDeclarations '}'
+        | ArrayAllocationExpression '{' push '}' pop
+        | ClassAllocationExpression '{' push '}' pop
+        | ArrayAllocationExpression '{' push ArrayInitializers '}' pop
+        | ClassAllocationExpression '{' push FieldDeclarations '}' pop
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -766,7 +659,7 @@ def p_DimExprs(p):
     '''DimExprs : DimExpr
     | DimExprs DimExpr
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -780,7 +673,7 @@ def p_Dims(p):
     '''Dims : OP_DIM
     | Dims OP_DIM
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -792,29 +685,35 @@ def p_PostfixExpression(p):
     p[0] = p[1]
 
 def p_RealPostfixExpression(p):
-    '''RealPostfixExpression : PostfixExpression OP_INC codegen_postfix
-    | PostfixExpression OP_DEC codegen_postfix
+    '''RealPostfixExpression : PostfixExpression OP_INC
+    | PostfixExpression OP_DEC
     '''
-    p[0] = p[1]
+    variable = flatten(p[1])[0]
+    p[0],varscope = retrieve(variable)
+    if p[2]=='++':
+        p[0] += 1
+    elif p[2]=='--':
+        p[0] -=1
+    symbol_table[(variable,varscope)]['value'] = p[0]
 
 def p_UnaryExpression(p):
-    '''UnaryExpression : OP_INC UnaryExpression codegen_prefix
-    | OP_DEC UnaryExpression codegen_prefix
+    '''UnaryExpression : OP_INC UnaryExpression
+    | OP_DEC UnaryExpression
     | ArithmeticUnaryOperator CastExpression
     | LogicalUnaryExpression
     '''
     if len(list(p))==3:
         variable = flatten(p[2])[0]
-        p[0] = retrieve(variable)
-        if variable in symbol_table:
+        p[0],varscope = retrieve(variable)
+        if (variable,varscope) in symbol_table:
             if p[1]=='++':
                 p[0] += 1
             elif p[1]=='--':
                 p[0] -= 1
-            symbol_table[variable]['value'] = p[0]
+            symbol_table[(variable,varscope)]['value'] = p[0]
         elif p[1] == '-':
             p[0] = -flatten(p[2])[0]
-    elif(len(list(p)) == 2):
+    elif(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -847,12 +746,12 @@ def p_ArithmeticUnaryOperator(p):
     p[0] = p[1]
 
 def p_CastExpression(p):
-    '''CastExpression : UnaryExpression push
+    '''CastExpression : UnaryExpression
     | '(' PrimitiveTypeExpression ')' CastExpression
     | '(' ClassTypeExpression ')' CastExpression
     | '(' Expression ')' LogicalUnaryExpression
     '''
-    if(len(list(p)) == 3):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -861,7 +760,7 @@ def p_PrimitiveTypeExpression(p):
     '''PrimitiveTypeExpression : PrimitiveType
         | PrimitiveType Dims
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -872,93 +771,140 @@ def p_ClassTypeExpression(p):
     p[0] = p[1:]
 
 def p_MultiplicativeExpression(p):
-    '''MultiplicativeExpression : CastExpression 
-    | MultiplicativeExpression '*' push  CastExpression codegen_binop
-    | MultiplicativeExpression '/' push CastExpression codegen_binop
-    | MultiplicativeExpression '%' push CastExpression codegen_binop
+    '''MultiplicativeExpression : CastExpression
+    | MultiplicativeExpression '*' CastExpression
+    | MultiplicativeExpression '/' CastExpression
+    | MultiplicativeExpression '%' CastExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+        if p[2]=='*':
+            p[0] = t1*t2
+        elif p[2]=='/':
+            p[0] = t1/t2
+        elif p[2]=='%':
+            p[0] = t1%t2
     else:
-        p[0] = p[1]
+        p[0] = p[1:]
 
 # Need to add string case.
 def p_AdditiveExpression(p):
     '''AdditiveExpression : MultiplicativeExpression
-    | AdditiveExpression '+' push MultiplicativeExpression codegen_binop
-    | AdditiveExpression '-' push MultiplicativeExpression codegen_binop
+    | AdditiveExpression '+' MultiplicativeExpression
+    | AdditiveExpression '-' MultiplicativeExpression
     '''
-    #search
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+
+
+
+
+        if p[2]=='+':
+            p[0] = t1+t2
+        elif p[2]=='-':
+            p[0] = t1-t2
     else:
-        p[0] = p[1]
+        p[0] = p[1:]
 
 def p_RelationalExpression(p):
     '''RelationalExpression : AdditiveExpression
-    | RelationalExpression '<' push AdditiveExpression codegen_binop
-    | RelationalExpression '>' push AdditiveExpression codegen_binop
-    | RelationalExpression OP_LE push AdditiveExpression codegen_binop
-    | RelationalExpression OP_GE push AdditiveExpression codegen_binop
+    | RelationalExpression '<' AdditiveExpression
+    | RelationalExpression '>' AdditiveExpression
+    | RelationalExpression OP_LE AdditiveExpression
+    | RelationalExpression OP_GE AdditiveExpression
     '''
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
 
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+        if p[2]=='<':
+            p[0] = t1 < t2
+        elif p[2]=='>':
+            p[0] = t1 > t2
+        elif p[2]=='<=':
+            p[0] = t1 <= t2
+        elif p[2]=='>=':
+            p[0] = t1 >= t2
     else:
-        p[0] = p[1]
+        p[0] = p[1:]
 
 def p_EqualityExpression(p):
     '''EqualityExpression : RelationalExpression
-        | EqualityExpression OP_EQ push RelationalExpression codegen_binop
-        | EqualityExpression OP_NE push RelationalExpression codegen_binop
+        | EqualityExpression OP_EQ RelationalExpression
+        | EqualityExpression OP_NE RelationalExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
-    else:
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+
+        if p[2]=='==':
+            p[0] = t1 == t2
+        elif p[2]=='!=':
+            p[0] = t1 != t2
+    elif(len(p[:]) == 2):
         p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_AndExpression(p):
     '''AndExpression : EqualityExpression
-        | AndExpression '&' push EqualityExpression codegen_binop
+        | AndExpression '&' EqualityExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
-    else:
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 & t2
+    elif(len(p[:]) == 2):
         p[0] = p[1]
+    else:
+        p[0] = p[1:]
 
 def p_ExclusiveOrExpression(p):
     '''ExclusiveOrExpression : AndExpression
-    | ExclusiveOrExpression '^' push AndExpression codegen_binop
+    | ExclusiveOrExpression '^' AndExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 ^ t2
     else:
         p[0] = p[1]
 
 def p_InclusiveOrExpression(p):
     '''InclusiveOrExpression : ExclusiveOrExpression
-    | InclusiveOrExpression '|' push ExclusiveOrExpression codegen_binop
+    | InclusiveOrExpression '|' ExclusiveOrExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+        p[0] = t1 | t2
+
     else:
         p[0] = p[1]
 
 def p_ConditionalAndExpression(p):
     '''ConditionalAndExpression : InclusiveOrExpression
-    | ConditionalAndExpression OP_LAND push InclusiveOrExpression codegen_binop
+    | ConditionalAndExpression OP_LAND InclusiveOrExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+
+        p[0] = t1 and t2
     else:
         p[0] = p[1]
 
 def p_ConditionalOrExpression(p):
     '''ConditionalOrExpression : ConditionalAndExpression
-    | ConditionalOrExpression OP_LOR push ConditionalAndExpression codegen_binop
+    | ConditionalOrExpression OP_LOR ConditionalAndExpression
     '''
-    if len(list(p))==6:
-        p[0] = p[1:3]+p[4:5]
+    if len(list(p))==4:
+        t1,varscope1 = retrieve(flatten(p[1])[0])
+        t2,varscope2 = retrieve(flatten(p[3])[0])
+
+        p[0] = t1 or t2
     else:
         p[0] = p[1]
 
@@ -966,25 +912,43 @@ def p_ConditionalExpression(p):
     '''ConditionalExpression : ConditionalOrExpression
     | ConditionalOrExpression '?' Expression ':' ConditionalExpression
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
 
 def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
-    | UnaryExpression push '=' ConditionalExpression codegen_assign
-    | UnaryExpression push  AssignmentOperator push AssignmentExpression codegen_shorthand
+    | UnaryExpression AssignmentOperator AssignmentExpression
     '''
-    if len(list(p)) == 6:
-        p[0] = p[1:2]+p[3:5]
-    elif len(list(p)) == 7:
-        p[0] = p[1:2] + p[3:4] + p[5:6]
+    if len(list(p)) == 4:
+        variable = flatten(p[1])[0]
+        p[0],varscope1 = retrieve(variable)
+        rhs,varscope2 = retrieve(flatten(p[3])[0])
+
+        if p[2][0]=='=':
+            p[0] = rhs
+        elif p[2][0]=='+=':
+            p[0] += rhs
+        elif p[2][0]=='-=':
+            p[0] -= rhs
+        elif p[2][0]=='*=':
+            p[0] *= rhs
+        elif p[2][0]=='/=':
+            p[0] /= rhs
+        elif p[2][0]=='%=':
+            p[0] %= rhs
+        elif p[2][0]=='&=':
+            p[0] &= rhs
+        elif p[2][0]=='|=':
+            p[0] |= rhs
+        symbol_table[(variable,varscope1)]['value'] = p[0]
     else:
         p[0] = p[1]
 
 def p_AssignmentOperator(p):
-    '''AssignmentOperator : ASS_MUL
+    '''AssignmentOperator : '='
+    | ASS_MUL
     | ASS_DIV
     | ASS_MOD
     | ASS_ADD
@@ -993,8 +957,6 @@ def p_AssignmentOperator(p):
     | ASS_OR
     '''
     p[0] = p[1]
-    
-
 
 def p_Expression(p):
     '''Expression : AssignmentExpression

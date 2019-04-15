@@ -1,5 +1,6 @@
 symbol_table = {}
-
+stack = []
+scopenum = 0
 keywords = ["boolean", "break", "byte",
 "char", "class", "continue",
 "do", "double",
@@ -15,9 +16,15 @@ keywords = ["boolean", "break", "byte",
 "var", "void",
 "while","for"]
 for kw in keywords:
-    symbol_table[kw] = {}
-    symbol_table[kw]['type'] = "keyword"
+    symbol_table[(kw,0)] = {}
+    symbol_table[(kw,0)]['type'] = "keyword"
 
+def t_MCOMMENT(t):
+   r'/\*(.|\n)*?\*/'
+   t.lineno += t.value.count('\n')
+def t_SCOMMENT(t):
+   r'(?://[^\n]*|/\*(?:(?!\*/).)*\*/)'
+   t.lineno += t.value.count('\n')
 # Tokens
 def t_OP_INC(t) :
  r"\+\+"
@@ -104,16 +111,21 @@ def t_IDENTIFIER(t):
     if t.value == "true" or t.value == "false":
         t.type = "BOOLLIT"
         return t
-    if t.value in symbol_table:
-        if("type" in symbol_table[t.value]):
-            if(symbol_table[t.value]["type"] == "keyword"):
+    if (t.value,0) in symbol_table:
+        if("type" in symbol_table[(t.value,0)]):
+            if(symbol_table[(t.value,0)]["type"] == "keyword"):
                 t.type = t.value.upper()
-                symbol_table[t.value]["token"] = t
-    else:
-        symbol_table[t.value] = {}
-        symbol_table[t.value]["type"] = "identifier"
-        symbol_table[t.value]["token"] = t
-        symbol_table[t.value]["valid"] = False
+                symbol_table[(t.value,0)]["token"] = t
+    elif (t.value,scopenum) not in symbol_table:
+        # print('hola',t.value)
+        symbol_table[(t.value,scopenum)] = {}
+        symbol_table[(t.value,scopenum)]["type"] = "identifier"
+        symbol_table[(t.value,scopenum)]["token"] = t
+        symbol_table[(t.value,scopenum)]["valid"] = False
+    # print('\n\n======================')
+    # for symbol in symbol_table:
+    # 	print(symbol,"\t",symbol_table[symbol])
+    # print('=================\n\n')
     return t
 
 def t_semicolon(t):
@@ -180,10 +192,14 @@ def t_rparen(t):
     return t
 def t_lbrace(t):
     r'{'
+    global scopenum
+    scopenum+=1
+    stack.append(scopenum)
     t.type = '{'      # Set token type to the expected literal
     return t
 def t_rbrace(t):
     r'}'
+    stack.pop()
     t.type = '}'      # Set token type to the expected literal
     return t
 def t_ass(t):

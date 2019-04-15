@@ -1,16 +1,15 @@
 package test;
 class add {
-    public void main(int args) {    
-        int j=0; 
-        int y =0;  
+    public void main(int args) {
+        int x = 9;
+        int y = 1;
+        int z = x + y;
         do{
-            y = y+1;
-            for(int i=0;i<4;i++){
-                y = y+1;
+            int x = 0;
+            {
+                x = 10;
             }
         }
-        while(j==0);
-        
-        int z=0;
+        while(y>10);
     }
 }

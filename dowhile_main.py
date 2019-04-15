@@ -63,8 +63,7 @@ def format_as_table(data,
 
 
 from dowhile_lex import *
-# from dowhile_yacc import *
-from icg import *
+from dowhile_yacc import *
 
 import sys
 import ply.lex as lex
@@ -75,6 +74,18 @@ parser = yacc.yacc(debug=0)
 with open('test.java','r') as f:
     input_str = f.read()
 
+
+
+x = parser.parse(input_str)
+print("\n\n\n============Parser Output============")
+print(x)
+print("\n\n\n============Symbol Table=============")
+
+for symbol in symbol_table:
+    if("token" in symbol_table[symbol]):
+    	if(symbol_table[symbol]["type"] == "identifier" and symbol_table[symbol]["valid"] == True):
+        	print(symbol,"\t",symbol_table[symbol])
+
 print("\n\n\n==========Tokens Generated============")
 lex.input(input_str)
  # Tokenize
@@ -84,16 +95,26 @@ while True:
      break      # No more input
  print(tok)
 
-x = parser.parse(input_str)
-print("\n\n\n============Parser Output============")
-print(x[0],"\n",x[1])
-print("\n\n\n============Symbol Table=============")
+# from sklearn import tree
+# import collections
+# import pydotplus
+# dot_data = tree.export_graphviz(x,
+#                                 # feature_names=data_feature_names,
+#                                 # out_file=None,
+#                                 filled=True,
+#                                 rounded=True)
+# graph = pydotplus.graph_from_dot_data(dot_data)
 
-for symbol in symbol_table:
-    if("token" in symbol_table[symbol]):
-    	if(symbol_table[symbol]["type"] == "identifier" and symbol_table[symbol]["valid"] == True):
-        	print(symbol,"\t",symbol_table[symbol])
+# # colors = ('turquoise', 'orange')
+# edges = collections.defaultdict(list)
 
-print(stack)
+# for edge in graph.get_edge_list():
+#     edges[edge.get_source()].append(int(edge.get_destination()))
 
+# for edge in edges:
+#     edges[edge].sort()
+#     for i in range(2):
+#         dest = graph.get_node(str(edges[edge][i]))[0]
+#         dest.set_fillcolor(colors[i])
 
+# graph.write_png('tree.png')
