@@ -19,6 +19,14 @@ for kw in keywords:
     symbol_table[kw]['type'] = "keyword"
 
 # Tokens
+
+def t_MCOMMENT(t):
+    r'/\*(.|\n)*?\*/'
+    t.lineno += t.value.count('\n')
+def t_SCOMMENT(t):
+    r'(?://[^\n]*|/\*(?:(?!\*/).)*\*/)'
+    t.lineno += t.value.count('\n')
+
 def t_OP_INC(t) :
  r"\+\+"
  t.type = "OP_INC"
@@ -86,8 +94,8 @@ def t_ASS_SUB(t) :
 
 t_LITERAL  = r'\"(\\.|[^\\"])*\"'
 
-def t_COMMENT(t) :
-    r'\/\*\*(\\.|[^\\"])*\*\/'
+# def t_COMMENT(t) :
+#     r'\/\*\*(\\.|[^\\"])*\*\/'
 
 # t_BOOLLIT  = r'"true"|"false"'
 # def t_BOOLLIT(t) :
