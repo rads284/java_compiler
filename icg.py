@@ -1,4 +1,5 @@
 from dowhile_lex import symbol_table,keywords
+from copy import deepcopy
 def flatten(l):
     output = []
     def removeNestings(l):
@@ -20,6 +21,21 @@ def retrieve(t):
         else:
             print("error line:",symbol_table[t]["token"],"   rhs = ", t)
     return t
+
+from beautifultable import BeautifulTable
+table = BeautifulTable()
+table.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+ig_list = []
+class quadruple:
+    def __init__(self,operator,arg1,arg2,result):
+        self.operator = operator
+        self.arg1 = arg1
+        self.arg2 = arg2
+        self.result = result
+        global table
+        table.append_row([operator,arg1,arg2,result])
+        ig_list.append([operator,arg1,arg2,result])
+
 
 
 stack = []
@@ -74,7 +90,10 @@ def p_CodegenPrefix(p):
 
     print(cur_var, ' = ' , flatten(p[-1])[0], flatten(p[-2])[0][0], 1 )
     print(flatten(p[-1])[0], ' = ', cur_var)
-    
+
+    quadruple(flatten(p[-2])[0][0],flatten(p[-1])[0],"1",cur_var)
+    quadruple("=",cur_var,"",flatten(p[-1])[0])
+
     var_num+=1
 
 def p_CodegenPostfix(p):
@@ -84,7 +103,9 @@ def p_CodegenPostfix(p):
 
     print(cur_var, ' = ' , flatten(p[-2])[0], flatten(p[-1])[0][0], 1 )
     print(flatten(p[-2])[0], ' = ', cur_var)
-    
+
+    quadruple(flatten(p[-1])[0][0],flatten(p[-2])[0],"1",cur_var)
+    quadruple("=",cur_var,"",flatten(p[-2])[0])
     var_num+=1
 
 def p_CodegenShorthand(p):
@@ -94,15 +115,19 @@ def p_CodegenShorthand(p):
 
     print(cur_var, ' = ' , stack[-3], stack[-2][0], stack[-1] )
     print(stack[-3], ' = ', cur_var)
+
+    quadruple(stack[-2][0],stack[-3],stack[-1],cur_var)
+    quadruple("=",cur_var,"",stack[-3])
     stack.pop()
     stack.pop()
     stack.pop()
-    
+
     var_num+=1
 
 def p_CodegenDeclarator(p):
     '''codegen_declarator :'''
     print(stack[-2],' = ',stack[-1])
+    quadruple("=",stack[-1],"",stack[-2])
     stack.pop()
     stack.pop()
 
@@ -118,6 +143,7 @@ def p_CodegenBinop(p):
     global var_num
     cur_var = "t"+str(var_num)
     print(cur_var," = ", stack[-3],stack[-2],stack[-1])
+    quadruple(stack[-2],stack[-3],stack[-1],cur_var)
     stack.pop()
     stack.pop()
     stack.pop()
@@ -128,6 +154,7 @@ def p_CodegenAssign(p):
     '''codegen_assign :'''
     global var_num
     print(stack[-2],' = ',stack[-1])
+    quadruple("=",stack[-1],"",stack[-2])
     stack.pop()
     stack.pop()
 
@@ -183,6 +210,139 @@ def p_CompilationUnit(p):
     '''CompilationUnit : ProgramFile
     '''
     p[0] = p[1]
+    print("\n\n\n\n\n====================Three Address Quadruple Intermediate Code Generation================")
+    print(table)
+    global ig_list
+
+    for line in ig_list:
+        print(line)
+
+    dead_ig = deepcopy(ig_list)
+    print("=============DEAD CODE===============")
+
+    flg = True
+    while flg:
+        for line in dead_ig:
+            if(line[0]=="=" or line[0]=="*" or line[0]=="/" or line[0]=="+" or line[0]=="-"):
+                op = line[3]
+                for new_line in dead_ig:
+                    if new_line!=line:
+                        if new_line[1]==op or new_line[2]==op:
+                            if(len(line)==4):
+                                line.append(True)
+                            else:
+                                line[4] = True
+                            break
+                        else:
+                            if(len(line)==4):
+                                line.append(False)
+                            elif len(line)==5:
+                                line[4] = False
+        flg = False
+        len1 = len(dead_ig)
+        dead_ig2 = [line for line in dead_ig if len(line)==4 or (len(line)==5 and line[4]==True)]
+        len2 = len(dead_ig2)
+        if(len1!=len2):
+            flg =True
+        dead_ig = dead_ig2
+
+    table2 = BeautifulTable()
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    for line in dead_ig:
+        if(len(line)==5):
+            if(line[4]==True):
+                table2.append_row(line[0:4])
+        else:
+            table2.append_row(line)
+
+    print(table2)
+
+    print("================CSE===================")
+
+    for i in range(len(ig_list)):
+        line = ig_list[i]
+        if(line[0]=="+" or line[0]=="-" or line[0]=="*" or line[0]=="/"):
+            op1 = line[1]
+            op2 = line[2]
+            op = line[0]
+            lhs = line[3]
+
+            for j in range(i+1,len(ig_list)):
+                new_line = ig_list[j]
+                if new_line!=line:
+                    if new_line[0] == op and new_line[1] == op1 and new_line[2] == op2:
+                        new_line[0] = "="
+                        new_line[1] = lhs
+                        new_line[2] = ""
+
+    table2 = BeautifulTable()
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    for line in ig_list:
+        if(len(line)==5):
+            if(line[4]==True):
+                table2.append_row(line[0:4])
+        else:
+            table2.append_row(line)
+
+    print(table2)
+
+
+    print("=============Constant Folding & Propagation===========")
+
+    for line in ig_list:
+        try:
+            float(line[1])
+            float(line[2])
+            if(line[1]==0.0 or line[2]==0.0):
+                line[1] = 0
+                line[0] = "="
+                line[2] = ""
+                continue
+
+            # elif(line[1]==1 or line[2]==1)
+            #     line[1] =
+            if(line[0]=="+" or line[0]=="-" or line[0]=="*" or line[0]=="/"):
+                op = line[0]
+                if(op=="+"):
+                    ans = line[1] + line[2]
+                elif(op=="-"):
+                    ans = line[1] - line[2]
+                elif(op=="*"):
+                    ans = line[1] * line[2]
+                elif(op=='/'):
+                    ans = line[1] / line[2]
+
+                line[0] = "="
+                line[1] = ans
+                line[2] = ""
+
+        except ValueError:
+            pass
+
+    for i in range(len(ig_list)):
+        line = ig_list[i]
+        try:
+            float(line[1])
+            if(line[2]==""):
+                lhs = line[3]
+                rhs = line[1]
+
+                for j in range(i+1,len(ig_list)):
+                    new_line = ig_list[j]
+
+        except:
+            pass
+
+    table2 = BeautifulTable()
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    for line in ig_list:
+        if(len(line)==5):
+            if(line[4]==True):
+                table2.append_row(line[0:4])
+        else:
+            table2.append_row(line)
+
+    print(table2)
 
 def p_ProgramFile(p):
     '''ProgramFile : PackageStatement ImportStatements TypeDeclarations
@@ -544,10 +704,11 @@ def p_CodegenDoInit(p):
     '''codegen_do_init : '''
     global lab_num
     global label
-    for i in range(2): 
+    for i in range(2):
         lab_num+=1
         label.append(lab_num)
-    print("L"+str(label[-2]),':')  
+    print("L"+str(label[-2]),':')
+    quadruple("Label","","","L"+str(label[-2]))
 
 def p_CodegenDoFinal(p):
     '''codegen_do_final : '''
@@ -557,18 +718,27 @@ def p_CodegenDoFinal(p):
     temp = 't'+str(var_num)
     print(temp,' = not', stack[-1])
     print('if',temp,'goto L'+str(label[-1]))
+
+    quadruple("!",stack[-1],"",temp)
+    quadruple("if",temp,"","L"+str(label[-1]))
     var_num+=1
+
     print('goto L'+str(label[-2]))
     print('L'+str(label[-1]),':')
+
+    quadruple("goto","","","L"+str(label[-2]))
+    quadruple("Label","","","L"+str(label[-1]))
 
 def p_CodegenForInit(p):
     '''codegen_for_init :'''
     global lab_num
     global label
-    for i in range(4): 
+    for i in range(4):
         lab_num+=1
         label.append(lab_num)
     print("L"+str(label[-4]),':')
+
+    quadruple("Label","","","L"+str(label[-4]))
 
 def p_CodegenForExpr(p):
     '''codegen_for_expr :'''
@@ -577,9 +747,15 @@ def p_CodegenForExpr(p):
     temp = 't'+str(var_num)
     print(temp,' = not', stack[-1])
     print('if',temp,'goto L'+str(label[-3]))
+
+    quadruple("!",stack[-1],"",temp)
+    quadruple("if",temp,"","L"+str(label[-3]))
     var_num+=1
     print('goto L'+str(label[-2]))
     print('L'+str(label[-1]),':')
+
+    quadruple("goto","","","L"+str(label[-2]))
+    quadruple("Label","","","L"+str(label[-1]))
 
 def p_CodegenForInc(p):
     '''codegen_for_inc :'''
@@ -588,19 +764,25 @@ def p_CodegenForInc(p):
     print('goto L'+str(label[-4]))
     print('L'+str(label[-2]),':')
 
+    quadruple("goto","","","L"+str(label[-4]))
+    quadruple("Label","","",'L'+str(label[-2]))
+
 def p_CodegenFor(p):
     '''codegen_for :'''
     global label
     global lab_num
     print('goto L'+str(label[-1]))
     print('L'+str(label[-3]),':')
+
+    quadruple("goto","","","L"+str(label[-1]))
+    quadruple("label","","",'L'+str(label[-3]))
     for i in range(4): label.pop()
 
 
 
 
 
-    
+
 def p_ForInit(p):
     '''ForInit : ExpressionStatements ';'
     | LocalVariableDeclarationStatement
@@ -626,7 +808,7 @@ def p_ForIncr(p):
 
 def p_ExpressionStatements(p):
     '''ExpressionStatements : ExpressionStatement
-    | ExpressionStatements ',' ExpressionStatement 
+    | ExpressionStatements ',' ExpressionStatement
     '''
     if(len(list(p)) == 2):
         p[0] = p[1]
@@ -644,7 +826,7 @@ def p_JumpStatement(p):
     p[0] = p[1:]
 
 def p_PrimaryExpression(p):
-    '''PrimaryExpression : QualifiedName 
+    '''PrimaryExpression : QualifiedName
     | NotJustName
     '''
     p[0] = p[1]
@@ -683,7 +865,7 @@ def p_ComplexPrimaryNoParenthesis(p):
     else:
         p[0] = p[1]
 
-    
+
 
 def p_ArrayAccess(p):
     '''ArrayAccess : QualifiedName '[' Expression ']'
@@ -872,7 +1054,7 @@ def p_ClassTypeExpression(p):
     p[0] = p[1:]
 
 def p_MultiplicativeExpression(p):
-    '''MultiplicativeExpression : CastExpression 
+    '''MultiplicativeExpression : CastExpression
     | MultiplicativeExpression '*' push  CastExpression codegen_binop
     | MultiplicativeExpression '/' push CastExpression codegen_binop
     | MultiplicativeExpression '%' push CastExpression codegen_binop
@@ -993,7 +1175,7 @@ def p_AssignmentOperator(p):
     | ASS_OR
     '''
     p[0] = p[1]
-    
+
 
 
 def p_Expression(p):
