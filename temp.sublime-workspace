@@ -1,0 +1,547 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"lab",
+				"lab_num"
+			],
+			[
+				"label",
+				"label_num"
+			],
+			[
+				"var",
+				"var_num"
+			],
+			[
+				"clas",
+				"class_table"
+			],
+			[
+				"class",
+				"class_table\t(dowhile_yacc.py)"
+			],
+			[
+				"dow",
+				"dowhile_lex\t(phase2_dowhile.py)"
+			],
+			[
+				"symbol",
+				"symbol_table"
+			],
+			[
+				"write",
+				"writeFile"
+			],
+			[
+				"time",
+				"timestamp"
+			],
+			[
+				"user",
+				"username"
+			],
+			[
+				"img",
+				"imgB64\t(note.model.js)"
+			],
+			[
+				"cate",
+				"categoryName"
+			],
+			[
+				"cat",
+				"categoryName"
+			],
+			[
+				"categ",
+				"categoryName\t(note.controller.js)"
+			],
+			[
+				"catego",
+				"categories"
+			],
+			[
+				"ca",
+				"categories"
+			],
+			[
+				"n",
+				"newjson"
+			],
+			[
+				"categor",
+				"categoryName"
+			],
+			[
+				"Ca",
+				"CategorySchema"
+			],
+			[
+				"fi",
+				"filecount"
+			],
+			[
+				"traverse",
+				"traversetree"
+			],
+			[
+				"file",
+				"fileroot"
+			],
+			[
+				"mkdir",
+				"mkdirpwd"
+			],
+			[
+				"buf",
+				"buflen"
+			],
+			[
+				"ft-",
+				"ft->fil->size"
+			],
+			[
+				"size",
+				"sizeof"
+			],
+			[
+				"off",
+				"offset"
+			],
+			[
+				"block",
+				"blocknr"
+			],
+			[
+				"ft",
+				"ft->fil->blockcount"
+			],
+			[
+				"block_",
+				"block_off"
+			],
+			[
+				"bow",
+				"bowler_vulnerability"
+			],
+			[
+				"bo",
+				"bowler_vulnerability"
+			],
+			[
+				"B",
+				"BLOCK_SIZE"
+			],
+			[
+				"new",
+				"new_off"
+			],
+			[
+				"file_",
+				"file_init"
+			],
+			[
+				"ios",
+				"iostream\tstandard header"
+			],
+			[
+				"if",
+				"ifmain\tif __name__ == '__main__'"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "test.java",
+			"settings":
+			{
+				"buffer_size": 261,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				"Run"
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"Package Control: in",
+				"Package Control: Install Package"
+			],
+			[
+				"packa",
+				"Package Control: Remove Package"
+			],
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"git",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 340.0,
+		"history":
+		[
+			"1+1",
+			"1+!",
+			"exit()",
+			"import math",
+			"version",
+			"a*2",
+			"a=1",
+			"exit()",
+			"exit",
+			"ls"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/rahulshiv/Documents/sem 6/ass/cd",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler"
+	],
+	"file_history":
+	[
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/cd.sublime-project",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/test.java",
+		"/Users/rahulshiv/Documents/coursera/ml/machine-learning-ex3/ex3/fmincg.m",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/dowhile.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/java_dowhile.l",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/icg.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/dowhile_yacc.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/dowhile_lex.py",
+		"/Users/rahulshiv/Documents/GitHub/bytematics/script.js",
+		"/Users/rahulshiv/Documents/CCBD/AlexNet-Experiments-Keras/convnets-keras/setup.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/parsetab.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cc/cc.sublime-project",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/dowhile_main.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/cc/selfielessacts/APP_API/app.js",
+		"/Users/rahulshiv/Makefile",
+		"/Users/rahulshiv/Documents/sem 6/ass/cd/java_compiler/phase2_dowhile.py",
+		"/Users/rahulshiv/Documents/sem 6/ass/nlp/pkksux.py",
+		"/Users/rahulshiv/Documents/sem 6 ass/nlp/WikipediaHomographData/data/train/pkksux.py",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_UI/login.html",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_UI/css/categories.css",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_UI/categories.html",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/config/database.config.js",
+		"/Users/rahulshiv/Desktop/pkk.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_UI/upload.html",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_UI/index.html",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/app.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/app/controllers/note.controller.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/app/models/note.model.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/doubts",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/app/routes/notes.routes.js",
+		"/Users/rahulshiv/Documents/ml/ml.py",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/trial.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/trial.js",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/APP_API/package.json",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/cc.sublime-project",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/User/untitled.sublime-build",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/selfielessacts/README.md",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/Terminal/Default (OSX).sublime-keymap",
+		"/Users/rahulshiv/Desktop/neelu.cpp",
+		"/Users/rahulshiv/Desktop/#include <stdio.h>",
+		"/Users/rahulshiv/Documents/sem 6 ass/cc/simple-file-upload/uploads/urls.py",
+		"/Users/rahulshiv/Desktop/desk/ipl/981009.yaml",
+		"/Users/rahulshiv/Desktop/desk/ipl/decisiontree_extractor.py",
+		"/Users/rahulshiv/Desktop/points",
+		"/Users/rahulshiv/trial.py",
+		"/Users/rahulshiv/Documents/sem 5 ass/da_assignment/DA-2018/keyword_dict.json",
+		"/Users/rahulshiv/Desktop/new2os/fs.c",
+		"/Users/rahulshiv/Desktop/new2os/fs.h",
+		"/Users/rahulshiv/Desktop/new2os/shell.c",
+		"/Users/rahulshiv/Desktop/new2os/report",
+		"/Users/rahulshiv/hangman.adb",
+		"/Users/rahulshiv/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/E59E254C-5C58-46EC-969F-989245000FB5/Matches_Next.py",
+		"/Users/rahulshiv/Documents/sem 5 ass/da_assignment/DA-2018/pre_process.ipynb",
+		"/Users/rahulshiv/Documents/osproject/fs.c",
+		"/Users/rahulshiv/Documents/osproject/fs.h",
+		"/Users/rahulshiv/Documents/osproject/shell.c",
+		"/Users/rahulshiv/Desktop/osragh/shell.c",
+		"/Users/rahulshiv/Desktop/desk/ipl/extractor.py",
+		"/Users/rahulshiv/Desktop/desk/ipl/batsman_vulnerability.py",
+		"/Users/rahulshiv/Downloads/4.py",
+		"/Users/rahulshiv/Downloads/illtry.py",
+		"/Users/rahulshiv/Desktop/os_ragh/fs.c",
+		"/Users/rahulshiv/Desktop/os_ragh/fs.h",
+		"/Users/rahulshiv/Desktop/os_ragh/shell.c",
+		"/Users/rahulshiv/Desktop/ipl/bowler_vulnerability.py",
+		"/Users/rahulshiv/Desktop/ipl/batsman_vulnerability.py",
+		"/Users/rahulshiv/Desktop/ipl/cluster.py",
+		"/Users/rahulshiv/Desktop/ipl/extractor.py",
+		"/Users/rahulshiv/Downloads/try/Fuse-File-System-master/disk7.c",
+		"/Users/rahulshiv/Downloads/try/Fuse-File-System-master/disk1.h",
+		"/Users/rahulshiv/Documents/sem 5 ass/bd/ipl/extractor.py",
+		"/Users/rahulshiv/osproject/fs.h",
+		"/Users/rahulshiv/osproject/shell.c",
+		"/Users/rahulshiv/Documents/clustering/batsman_clustering.py",
+		"/Users/rahulshiv/osproject/fs.c",
+		"/Users/rahulshiv/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/1C9A3B0C-4243-402A-91BB-5AD7177A3A22/test.py",
+		"/Users/rahulshiv/Documents/sem 5 ass/bd/proj.py",
+		"/Users/rahulshiv/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/C7DF2CA9-BF68-4BB6-956B-D402E22317E7/test.py",
+		"/Users/rahulshiv/code/3n+1.cpp",
+		"/Users/rahulshiv/Documents/sem 5 ass/bd/test.py",
+		"/Users/rahulshiv/Desktop/fs.c",
+		"/Users/rahulshiv/Downloads/try/Fuse-File-System-master/untitled",
+		"/Users/rahulshiv/Documents/osproject/disk.h",
+		"/Users/rahulshiv/Documents/osproject/FileSystem-master/simdisk.h",
+		"/Users/rahulshiv/Documents/osproject/FileSystem-master/simdisk.c",
+		"/Users/rahulshiv/Documents/osproject/FileSystem-master/file.c",
+		"/Users/rahulshiv/Documents/osproject/FileSystem-master/block.c",
+		"/Users/rahulshiv/Documents/osproject/disk.c",
+		"/Users/rahulshiv/Documents/GitHub/osproject/fs.h",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/dir.c",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/dir.h",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/makefile",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/node.c",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/fs.c",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/Function Name Display/Function Name Display.sublime-settings",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/Terminal/Terminal.sublime-settings",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/node.h",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/Git/Git.sublime-settings",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/All Autocomplete/All Autocomplete.sublime-settings",
+		"/Users/rahulshiv/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/test.c",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/README.md",
+		"/Users/rahulshiv/Downloads/PES-Fuse-master/the_fs",
+		"/Users/rahulshiv/try.cpp",
+		"/Users/rahulshiv/test.cpp"
+	],
+	"find":
+	{
+		"height": 39.0
+	},
+	"find_in_files":
+	{
+		"height": 101.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"for",
+			"codegen",
+			"for"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "test.java",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 261,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"git_gutter_is_enabled": true,
+							"syntax": "Packages/Java/Java.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 24.0
+	},
+	"input":
+	{
+		"height": 36.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SublimeLinter":
+	{
+		"height": 0.0
+	},
+	"output.exec":
+	{
+		"height": 249.0
+	},
+	"output.find_results":
+	{
+		"height": 108.0
+	},
+	"output.git":
+	{
+		"height": 108.0
+	},
+	"output.mdpopups":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "Packages/Python/Python.sublime-build",
+	"project": "temp.sublime-project",
+	"replace":
+	{
+		"height": 44.0
+	},
+	"save_all_on_build": false,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 331.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
