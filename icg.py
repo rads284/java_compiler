@@ -14,31 +14,64 @@ def flatten(l):
         output.append(l)
     return output
 
-def retrieve(t):
-    if t in symbol_table:
-        if symbol_table[t]['valid']:
-            t = symbol_table[t]['value']
+def retrieve_assignscope(t):
+    for a in reversed(stack):
+        if (t,a) in symbol_table:
+            if symbol_table[(t,a)]['valid']:
+                return a
+    return 0
+
+def retrieve_val(t,stack):
+    try:
+        float(t)
+        return float(t)
+    except:
+        for scope in reversed(stack):
+            if (t,scope) in symbol_table:
+                return symbol_table[t,scope]['value']
         else:
-            print("error line:",symbol_table[t]["token"],"   rhs = ", t)
-    return t
+            return None
+
+def retrieve(t):
+    flg = False
+    for a in reversed(stack):
+        if (t,a) in symbol_table:
+            if symbol_table[(t,a)]['valid']:
+                t = symbol_table[(t,a)]['value']
+                return (t,a)
+            else:
+                flg=True
+    if flg:
+        print("error",t,a,(t,a)in symbol_table)
+    return (t,0)
+
+def retrieve_scope(t,stack):
+    for a in reversed(stack):
+        if (t,a) in symbol_table:
+            return a
+    return 0
+
+stack = [0]
 
 from beautifultable import BeautifulTable
 table = BeautifulTable()
-table.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+table.column_headers = ["Operator", "Argument 1", "Argument 2","Result","Scope"]
 ig_list = []
 class quadruple:
-    def __init__(self,operator,arg1,arg2,result):
+    def __init__(self,operator,arg1,arg2,result,stack):
         self.operator = operator
         self.arg1 = arg1
         self.arg2 = arg2
         self.result = result
+        self.stack = deepcopy(stack)
+        # print('asduasdkhaksud',self.stack)
         global table
-        table.append_row([operator,arg1,arg2,result])
-        ig_list.append([operator,arg1,arg2,result])
+        table.append_row([operator,arg1,arg2,result,self.stack])
+        ig_list.append([operator,arg1,arg2,result,self.stack])
 
 
 
-stack = []
+stack_icg = []
 label = []
 var_num = 0
 lab_num = -1
@@ -91,8 +124,13 @@ def p_CodegenPrefix(p):
     print(cur_var, ' = ' , flatten(p[-1])[0], flatten(p[-2])[0][0], 1 )
     print(flatten(p[-1])[0], ' = ', cur_var)
 
-    quadruple(flatten(p[-2])[0][0],flatten(p[-1])[0],"1",cur_var)
-    quadruple("=",cur_var,"",flatten(p[-1])[0])
+    quadruple(flatten(p[-2])[0][0],flatten(p[-1])[0],"1",cur_var,stack)
+    quadruple("=",cur_var,"",flatten(p[-1])[0],stack)
+
+    symbol_table[(cur_var,0)] = {}
+    symbol_table[(cur_var,0)]["type"] = "temporary"
+    symbol_table[(cur_var,0)]["valid"] = True
+    symbol_table[(cur_var,0)]["value"] = None
 
     var_num+=1
 
@@ -104,8 +142,14 @@ def p_CodegenPostfix(p):
     print(cur_var, ' = ' , flatten(p[-2])[0], flatten(p[-1])[0][0], 1 )
     print(flatten(p[-2])[0], ' = ', cur_var)
 
-    quadruple(flatten(p[-1])[0][0],flatten(p[-2])[0],"1",cur_var)
-    quadruple("=",cur_var,"",flatten(p[-2])[0])
+    quadruple(flatten(p[-1])[0][0],flatten(p[-2])[0],"1",cur_var,stack)
+    quadruple("=",cur_var,"",flatten(p[-2])[0],stack)
+
+    symbol_table[(cur_var,0)] = {}
+    symbol_table[(cur_var,0)]["type"] = "temporary"
+    symbol_table[(cur_var,0)]["valid"] = True
+    symbol_table[(cur_var,0)]["value"] = None
+
     var_num+=1
 
 def p_CodegenShorthand(p):
@@ -113,56 +157,76 @@ def p_CodegenShorthand(p):
     global var_num
     cur_var = "t"+str(var_num)
 
-    print(cur_var, ' = ' , stack[-3], stack[-2][0], stack[-1] )
-    print(stack[-3], ' = ', cur_var)
+    print(cur_var, ' = ' , stack_icg[-3], stack_icg[-2][0], stack_icg[-1],0)
+    print(stack_icg[-3], ' = ', cur_var)
 
-    quadruple(stack[-2][0],stack[-3],stack[-1],cur_var)
-    quadruple("=",cur_var,"",stack[-3])
-    stack.pop()
-    stack.pop()
-    stack.pop()
+    quadruple(stack_icg[-2][0],stack_icg[-3],stack_icg[-1],cur_var,stack)
+    quadruple("=",cur_var,"",stack_icg[-3],stack)
+
+    symbol_table[(cur_var,0)] = {}
+    symbol_table[(cur_var,0)]["type"] = "temporary"
+    symbol_table[(cur_var,0)]["valid"] = True
+    symbol_table[(cur_var,0)]["value"] = None
+
+    stack_icg.pop()
+    stack_icg.pop()
+    stack_icg.pop()
 
     var_num+=1
 
 def p_CodegenDeclarator(p):
     '''codegen_declarator :'''
-    print(stack[-2],' = ',stack[-1])
-    quadruple("=",stack[-1],"",stack[-2])
-    stack.pop()
-    stack.pop()
+    print(stack_icg[-2],' = ',stack_icg[-1])
+    print(stack)
+    # print("----------------",stack_icg[-2],retrieve_scope(stack_icg[-2]))
+    quadruple("=",stack_icg[-1],"",stack_icg[-2],stack)
 
-def p_Push(p):
-    '''push :'''
-    # print(stack,'ancd',p[-1],'abc',p[:])
-    if len(stack) == 0 and flatten(p[-2])[0] not in symbol_table:
-        stack.append(flatten(p[-2])[0])
-    stack.append(flatten(p[-1])[0])
+    stack_icg.pop()
+    stack_icg.pop()
+
+def p_push_icg(p):
+    '''push_icg :'''
+    # print(stack_icg,'ancd',p[-1],'abc',p[:])
+    if len(stack_icg) == 0 and flatten(p[-2])[0] not in symbol_table:
+        stack_icg.append(flatten(p[-2])[0])
+    stack_icg.append(flatten(p[-1])[0])
 
 def p_CodegenBinop(p):
     '''codegen_binop :'''
     global var_num
     cur_var = "t"+str(var_num)
-    print(cur_var," = ", stack[-3],stack[-2],stack[-1])
-    quadruple(stack[-2],stack[-3],stack[-1],cur_var)
-    stack.pop()
-    stack.pop()
-    stack.pop()
-    stack.append(cur_var)
+    print(cur_var," = ", stack_icg[-3],stack_icg[-2],stack_icg[-1])
+    quadruple(stack_icg[-2],stack_icg[-3],stack_icg[-1],cur_var,stack)
+
+    symbol_table[(cur_var,0)] = {}
+    symbol_table[(cur_var,0)]["type"] = "temporary"
+    symbol_table[(cur_var,0)]["valid"] = True
+    symbol_table[(cur_var,0)]["value"] = None
+    print("\n\n\n============Symbol Table=============")
+
+    for symbol in symbol_table:
+        if((symbol_table[symbol]["type"] == "identifier" or symbol_table[symbol]["type"] == "temporary" )and symbol_table[symbol]["valid"] == True):
+            print(symbol,"\t",symbol_table[symbol])
+
+    stack_icg.pop()
+    stack_icg.pop()
+    stack_icg.pop()
+    stack_icg.append(cur_var)
     var_num+=1
 
 def p_CodegenAssign(p):
     '''codegen_assign :'''
     global var_num
-    print(stack[-2],' = ',stack[-1])
-    quadruple("=",stack[-1],"",stack[-2])
-    stack.pop()
-    stack.pop()
+    print(stack_icg[-2],' = ',stack_icg[-1])
+    quadruple("=",stack_icg[-1],"",stack_icg[-2],stack)
+    stack_icg.pop()
+    stack_icg.pop()
 
 
 def p_error(p):
 
-    # get formatted representation of stack
-    stack_state_str = ' '.join([symbol.type for symbol in parser.symstack][1:])
+    # get formatted representation of stack_icg
+    stack_state_str = ' '.join([symbol.type for symbol in parser.symstack_icg][1:])
 
     print('Syntax error in input! Parser State:{} {} . {}'
           .format(parser.state,
@@ -247,18 +311,17 @@ def p_CompilationUnit(p):
         dead_ig = dead_ig2
 
     table2 = BeautifulTable()
-    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result","Scope"]
     for line in dead_ig:
-        if(len(line)==5):
+        if(len(line)==6):
             if(line[4]==True):
-                table2.append_row(line[0:4])
+                table2.append_row(line[0:5])
         else:
             table2.append_row(line)
 
     print(table2)
 
     print("================CSE===================")
-
     for i in range(len(ig_list)):
         line = ig_list[i]
         if(line[0]=="+" or line[0]=="-" or line[0]=="*" or line[0]=="/"):
@@ -276,11 +339,11 @@ def p_CompilationUnit(p):
                         new_line[2] = ""
 
     table2 = BeautifulTable()
-    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result","Scope"]
     for line in ig_list:
-        if(len(line)==5):
+        if(len(line)==6):
             if(line[4]==True):
-                table2.append_row(line[0:4])
+                table2.append_row(line[0:5])
         else:
             table2.append_row(line)
 
@@ -290,34 +353,31 @@ def p_CompilationUnit(p):
     print("=============Constant Folding & Propagation===========")
 
     for line in ig_list:
-        try:
-            float(line[1])
-            float(line[2])
-            if(line[1]==0.0 or line[2]==0.0):
-                line[1] = 0
-                line[0] = "="
-                line[2] = ""
-                continue
-
+            print(line)
+            t1 = retrieve_val(line[1],line[4])
+            t2 = retrieve_val(line[2],line[4])
+            # print('t1,t2',t1,t2)
             # elif(line[1]==1 or line[2]==1)
             #     line[1] =
-            if(line[0]=="+" or line[0]=="-" or line[0]=="*" or line[0]=="/"):
+            if(line[0]=="+" or line[0]=="-" or line[0]=="*" or line[0]=="/" or line[0]=="="):
                 op = line[0]
                 if(op=="+"):
-                    ans = line[1] + line[2]
+                    ans = t1 + t2
                 elif(op=="-"):
-                    ans = line[1] - line[2]
+                    ans = t1 - t2
                 elif(op=="*"):
-                    ans = line[1] * line[2]
+                    ans = t1 * t2
                 elif(op=='/'):
-                    ans = line[1] / line[2]
+                    ans = t1 / t2
+                elif(op=='='):
+                    ans = t1
 
                 line[0] = "="
                 line[1] = ans
                 line[2] = ""
-
-        except ValueError:
-            pass
+            scope = retrieve_scope(line[3],line[4])
+            symbol_table[(line[3],scope)]['value'] = ans
+            # print(line[3],symbol_table[(line[3],scope)])
 
     for i in range(len(ig_list)):
         line = ig_list[i]
@@ -334,15 +394,21 @@ def p_CompilationUnit(p):
             pass
 
     table2 = BeautifulTable()
-    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result"]
+    table2.column_headers = ["Operator", "Argument 1", "Argument 2","Result","Scope"]
     for line in ig_list:
-        if(len(line)==5):
+        if(len(line)==6):
             if(line[4]==True):
-                table2.append_row(line[0:4])
+                table2.append_row(line[0:5])
         else:
             table2.append_row(line)
 
     print(table2)
+
+    print("\n\n\n============Symbol Table=============")
+
+    for symbol in symbol_table:
+        if((symbol_table[symbol]["type"] == "identifier" or symbol_table[symbol]["type"] == "temporary" )and symbol_table[symbol]["valid"] == True):
+            print(symbol,"\t",symbol_table[symbol])
 
 def p_ProgramFile(p):
     '''ProgramFile : PackageStatement ImportStatements TypeDeclarations
@@ -403,8 +469,8 @@ def p_QualifiedName(p):
         p[0] = p[1:]
 
 def p_TypeDeclaration(p):
-    '''TypeDeclaration : ClassHeader '{' FieldDeclarations '}'
-    | ClassHeader '{' '}'
+    '''TypeDeclaration : ClassHeader '{' push FieldDeclarations '}' pop
+    | ClassHeader '{' push '}' pop
     '''
     p[0] = p[1:]
 
@@ -413,12 +479,13 @@ def p_ClassHeader(p):
     |           ClassWord IDENTIFIER
     '''
     if len(list(p))==4:
-        symbol_table[p[3]]['modifiers'] = flatten(p[1])
+        symbol_table[(p[3],currentscope)]['modifiers'] = flatten(p[1])
     else:
-        symbol_table[p[2]]['modifiers'] = None
-    symbol_table[flatten(list(p))[-1]]["valid"] = True
-    symbol_table[flatten(list(p))[-1]]["dtype"] = "class"
+        symbol_table[(p[2],currentscope)]['modifiers'] = None
+    symbol_table[(flatten(list(p))[-1],currentscope)]["valid"] = True
+    symbol_table[(flatten(list(p))[-1],currentscope)]["dtype"] = "class"
     p[0] = p[1:]
+
 
 def p_Modifiers(p):
     '''Modifiers : Modifier
@@ -478,19 +545,19 @@ def p_FieldVariableDeclaration(p):
     '''
     if len(list(p))==4:
         for variable in flatten(p[3]):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = flatten(p[1])
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[2])[0]
+            if (variable,currentscope) in symbol_table:
+                symbol_table[(variable,currentscope)]['modifiers'] = flatten(p[1])
+                symbol_table[(variable,currentscope)]['value'] = 'None'
+                symbol_table[(variable,currentscope)]["valid"] = True
+                symbol_table[(variable,currentscope)]['dtype'] = flatten(p[2])[0]
                 # symbol_table[(variable,True)]['global'] = True
     else:
         for variable in flatten(p[2]):
-            if variable in symbol_table:
-                symbol_table[variable]['modifiers'] = None
-                symbol_table[variable]['value'] = 'None'
-                symbol_table[variable]["valid"] = True
-                symbol_table[variable]['dtype'] = flatten(p[1])[0]
+            if (variable,currentscope) in symbol_table:
+                symbol_table[(variable,currentscope)]['modifiers'] = None
+                symbol_table[(variable,currentscope)]['value'] = 'None'
+                symbol_table[(variable,currentscope)]["valid"] = True
+                symbol_table[(variable,currentscope)]['dtype'] = flatten(p[1])[0]
                 # symbol_table[(variable,True)]['global'] = True
 
     p[0] = p[1:]
@@ -499,14 +566,15 @@ def p_VariableDeclarators(p):
     '''VariableDeclarators : VariableDeclarator
     | VariableDeclarators ',' VariableDeclarator
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
 
+
 def p_VariableDeclarator(p):
     '''VariableDeclarator : DeclaratorName
-    | DeclaratorName push '=' VariableInitializer codegen_declarator
+    | DeclaratorName push_icg '=' VariableInitializer codegen_declarator
     '''
     if(len(list(p)) == 2):
         p[0] = p[1]
@@ -514,14 +582,15 @@ def p_VariableDeclarator(p):
         p[0] = p[1:2]+p[3:5]
     if len(list(p))==5:
         variable = flatten(p[1])[0]
-        symbol_table[variable]['value'] = flatten(p[3])[0]#int
+        symbol_table[(variable,currentscope)]['value'] = flatten(p[3])[0]#int
+
 
 def p_VariableInitializer(p):
     '''VariableInitializer : Expression
-    | '{' '}'
-        | '{' ArrayInitializers '}'
+    | '{' push '}' pop
+        | '{' push ArrayInitializers '}' pop
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -542,14 +611,14 @@ def p_MethodDeclaration(p):
     '''
     if len(list(p)) == 5:
         method = flatten(p[3])[0]
-        symbol_table[method]['modifiers'] = flatten(p[1])
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[2])[0]
+        symbol_table[(method,stack[-1])]['modifiers'] = flatten(p[1])
+        symbol_table[(method,stack[-1])]["valid"] = True
+        symbol_table[(method,stack[-1])]['dtype'] = flatten(p[2])[0]
     else:
         method =flatten(p[2])[0]
-        symbol_table[method]['modifiers'] = None
-        symbol_table[method]["valid"] = True
-        symbol_table[method]['dtype'] = flatten(p[1])[0]
+        symbol_table[(method,stack[-1])]['modifiers'] = None
+        symbol_table[(method,stack[-1])]["valid"] = True
+        symbol_table[(method,stack[-1])]['dtype'] = flatten(p[1])[0]
     p[0] = p[1:]
 
 def p_MethodDeclarator(p):
@@ -557,13 +626,14 @@ def p_MethodDeclarator(p):
     | DeclaratorName '(' ')'
     | MethodDeclarator OP_DIM
     '''
+
     if len(list(p)) == 5:
         method = flatten(p[1])[0]
-        symbol_table[method]['params'] = []
+        symbol_table[(method,currentscope)]['params'] = []
         for param in flatten(p[3]):
-            if param in symbol_table and param not in symbol_table[method]['params']:
-                if symbol_table[param]['type'] =='identifier':
-                    symbol_table[method]['params'].append(param)
+            if (param,currentscope) in symbol_table and param not in symbol_table[(method,currentscope)]['params']:
+                if symbol_table[(param,currentscope)]['type'] =='identifier':
+                    symbol_table[(method,currentscope)]['params'].append(param)
     p[0] = p[1:]
 
 def p_ParameterList(p):
@@ -579,8 +649,9 @@ def p_Parameter(p):
     '''Parameter : TypeSpecifier DeclaratorName
     '''
     variable = flatten(p[2])[0]
-    symbol_table[variable]['dtype'] = flatten(p[1])[0]
-    symbol_table[variable]['valid'] = True
+    if variable not in keywords:
+        symbol_table[(variable,currentscope)]['dtype'] = flatten(p[1])[0]
+        symbol_table[(variable,currentscope)]['valid'] = True
     p[0] = p[1:]
 
 def p_DeclaratorName(p):
@@ -605,12 +676,12 @@ def p_ConstructorDeclaration(p):
     '''
     if len(list(p)) == 4:
         method = flatten(p[2])[0]
-        symbol_table[method]['modifiers'] = flatten(p[1])
-        symbol_table[method]["valid"] = True
+        symbol_table[(method,currentscope)]['modifiers'] = flatten(p[1])
+        symbol_table[(method,currentscope)]["valid"] = True
     else:
         method =flatten(p[1])[0]
-        symbol_table[method]['modifiers'] = None
-        symbol_table[method]["valid"] = True
+        symbol_table[(method,currentscope)]['modifiers'] = None
+        symbol_table[(method,currentscope)]["valid"] = True
     p[0] = p[1:]
 
 def p_ConstructorDeclarator(p):
@@ -619,11 +690,11 @@ def p_ConstructorDeclarator(p):
     '''
     if len(list(p)) == 5:
         method = flatten(p[1])[0]
-        symbol_table[method]['params'] = []
+        symbol_table[(method,currentscope)]['params'] = []
         for param in flatten(p[3]):
-            if param in symbol_table and param not in symbol_table[method]['params']:
-                if symbol_table[param]['type'] =='IDENTIFIER':
-                    symbol_table[method]['params'].append(param)
+            if (param,currentscope) in symbol_table and param not in symbol_table[(method,currentscope)]['params']:
+                if symbol_table[(param,currentscope)]['type'] =='IDENTIFIER':
+                    symbol_table[(method,currentscope)]['params'].append(param)
     p[0] = p[1:]
 
 def p_StaticInitializer(p):
@@ -637,10 +708,28 @@ def p_NonStaticInitializer(p):
     p[0] = p[1]
 
 def p_Block(p):
-    '''Block : '{' LocalVariableDeclarationsAndStatements '}'
-    | '{' '}'
+    '''Block : '{' push LocalVariableDeclarationsAndStatements '}' pop
+    | '{' push '}' pop
     '''
     p[0] = p[1:]
+
+scopenum = 0
+currentscope = 0
+def p_push(p):
+    '''push :'''
+    global scopenum,currentscope
+    # scopenum+=1
+    scopenum+=1
+    currentscope = scopenum
+    stack.append(scopenum)
+
+
+
+def p_pop(p):
+    '''pop :'''
+    stack.pop()
+    global currentscope
+    currentscope = stack[-1]
 
 def p_LocalVariableDeclarationsAndStatements(p):
     '''LocalVariableDeclarationsAndStatements : LocalVariableDeclarationOrStatement
@@ -663,12 +752,17 @@ def p_LocalVariableDeclarationOrStatement(p):
 def p_LocalVariableDeclarationStatement(p):
     '''LocalVariableDeclarationStatement : TypeSpecifier VariableDeclarators ';'
     '''
+    global currentscope
+
     for variable in flatten(p[2]):
-        if variable in symbol_table:
-            symbol_table[variable]['modifiers'] = None
-            # symbol_table[variable]['value'] = 6
-            symbol_table[variable]['valid'] = True
-            symbol_table[variable]['dtype'] = flatten(p[1])[0]
+        if (variable,currentscope) in symbol_table:
+            symbol_table[(variable,currentscope)]['modifiers'] = None
+            symbol_table[(variable,currentscope)]['scope'] = "s"+str(currentscope)
+            symbol_table[(variable,currentscope)]['valid'] = True
+            symbol_table[(variable,currentscope)]['dtype'] = flatten(p[1])[0]
+
+
+
     p[0] = p[1:]
 
 def p_Statement(p):
@@ -712,14 +806,14 @@ def p_CodegenDoInit(p):
 
 def p_CodegenDoFinal(p):
     '''codegen_do_final : '''
-    global stack
+    global stack_icg
     global label
     global var_num
     temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1])
+    print(temp,' = not', stack_icg[-1])
     print('if',temp,'goto L'+str(label[-1]))
 
-    quadruple("!",stack[-1],"",temp)
+    quadruple("!",stack_icg[-1],"",temp)
     quadruple("if",temp,"","L"+str(label[-1]))
     var_num+=1
 
@@ -745,10 +839,10 @@ def p_CodegenForExpr(p):
     global var_num
     global label
     temp = 't'+str(var_num)
-    print(temp,' = not', stack[-1])
+    print(temp,' = not', stack_icg[-1])
     print('if',temp,'goto L'+str(label[-3]))
 
-    quadruple("!",stack[-1],"",temp)
+    quadruple("!",stack_icg[-1],"",temp)
     quadruple("if",temp,"","L"+str(label[-3]))
     var_num+=1
     print('goto L'+str(label[-2]))
@@ -921,12 +1015,12 @@ def p_NewAllocationExpression(p):
 def p_PlainNewAllocationExpression(p):
     '''PlainNewAllocationExpression : ArrayAllocationExpression
         | ClassAllocationExpression
-        | ArrayAllocationExpression '{' '}'
-        | ClassAllocationExpression '{' '}'
-        | ArrayAllocationExpression '{' ArrayInitializers '}'
-        | ClassAllocationExpression '{' FieldDeclarations '}'
+        | ArrayAllocationExpression '{' push '}' pop
+        | ClassAllocationExpression '{' push '}' pop
+        | ArrayAllocationExpression '{' push ArrayInitializers '}' pop
+        | ClassAllocationExpression '{' push FieldDeclarations '}' pop
     '''
-    if(len(list(p)) == 2):
+    if(len(p[:]) == 2):
         p[0] = p[1]
     else:
         p[0] = p[1:]
@@ -985,21 +1079,8 @@ def p_UnaryExpression(p):
     | ArithmeticUnaryOperator CastExpression
     | LogicalUnaryExpression
     '''
-    if len(list(p))==3:
-        variable = flatten(p[2])[0]
-        p[0] = retrieve(variable)
-        if variable in symbol_table:
-            if p[1]=='++':
-                p[0] += 1
-            elif p[1]=='--':
-                p[0] -= 1
-            symbol_table[variable]['value'] = p[0]
-        elif p[1] == '-':
-            p[0] = -flatten(p[2])[0]
-    elif(len(list(p)) == 2):
-        p[0] = p[1]
-    else:
-        p[0] = p[1:]
+
+    p[0] = p[1:]
 
 
 
@@ -1029,7 +1110,7 @@ def p_ArithmeticUnaryOperator(p):
     p[0] = p[1]
 
 def p_CastExpression(p):
-    '''CastExpression : UnaryExpression push
+    '''CastExpression : UnaryExpression push_icg
     | '(' PrimitiveTypeExpression ')' CastExpression
     | '(' ClassTypeExpression ')' CastExpression
     | '(' Expression ')' LogicalUnaryExpression
@@ -1055,9 +1136,9 @@ def p_ClassTypeExpression(p):
 
 def p_MultiplicativeExpression(p):
     '''MultiplicativeExpression : CastExpression
-    | MultiplicativeExpression '*' push  CastExpression codegen_binop
-    | MultiplicativeExpression '/' push CastExpression codegen_binop
-    | MultiplicativeExpression '%' push CastExpression codegen_binop
+    | MultiplicativeExpression '*' push_icg  CastExpression codegen_binop
+    | MultiplicativeExpression '/' push_icg CastExpression codegen_binop
+    | MultiplicativeExpression '%' push_icg CastExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1067,8 +1148,8 @@ def p_MultiplicativeExpression(p):
 # Need to add string case.
 def p_AdditiveExpression(p):
     '''AdditiveExpression : MultiplicativeExpression
-    | AdditiveExpression '+' push MultiplicativeExpression codegen_binop
-    | AdditiveExpression '-' push MultiplicativeExpression codegen_binop
+    | AdditiveExpression '+' push_icg MultiplicativeExpression codegen_binop
+    | AdditiveExpression '-' push_icg MultiplicativeExpression codegen_binop
     '''
     #search
     if len(list(p))==6:
@@ -1078,10 +1159,10 @@ def p_AdditiveExpression(p):
 
 def p_RelationalExpression(p):
     '''RelationalExpression : AdditiveExpression
-    | RelationalExpression '<' push AdditiveExpression codegen_binop
-    | RelationalExpression '>' push AdditiveExpression codegen_binop
-    | RelationalExpression OP_LE push AdditiveExpression codegen_binop
-    | RelationalExpression OP_GE push AdditiveExpression codegen_binop
+    | RelationalExpression '<' push_icg AdditiveExpression codegen_binop
+    | RelationalExpression '>' push_icg AdditiveExpression codegen_binop
+    | RelationalExpression OP_LE push_icg AdditiveExpression codegen_binop
+    | RelationalExpression OP_GE push_icg AdditiveExpression codegen_binop
     '''
 
     if len(list(p))==6:
@@ -1091,8 +1172,8 @@ def p_RelationalExpression(p):
 
 def p_EqualityExpression(p):
     '''EqualityExpression : RelationalExpression
-        | EqualityExpression OP_EQ push RelationalExpression codegen_binop
-        | EqualityExpression OP_NE push RelationalExpression codegen_binop
+        | EqualityExpression OP_EQ push_icg RelationalExpression codegen_binop
+        | EqualityExpression OP_NE push_icg RelationalExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1101,7 +1182,7 @@ def p_EqualityExpression(p):
 
 def p_AndExpression(p):
     '''AndExpression : EqualityExpression
-        | AndExpression '&' push EqualityExpression codegen_binop
+        | AndExpression '&' push_icg EqualityExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1110,7 +1191,7 @@ def p_AndExpression(p):
 
 def p_ExclusiveOrExpression(p):
     '''ExclusiveOrExpression : AndExpression
-    | ExclusiveOrExpression '^' push AndExpression codegen_binop
+    | ExclusiveOrExpression '^' push_icg AndExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1119,7 +1200,7 @@ def p_ExclusiveOrExpression(p):
 
 def p_InclusiveOrExpression(p):
     '''InclusiveOrExpression : ExclusiveOrExpression
-    | InclusiveOrExpression '|' push ExclusiveOrExpression codegen_binop
+    | InclusiveOrExpression '|' push_icg ExclusiveOrExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1128,7 +1209,7 @@ def p_InclusiveOrExpression(p):
 
 def p_ConditionalAndExpression(p):
     '''ConditionalAndExpression : InclusiveOrExpression
-    | ConditionalAndExpression OP_LAND push InclusiveOrExpression codegen_binop
+    | ConditionalAndExpression OP_LAND push_icg InclusiveOrExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1137,7 +1218,7 @@ def p_ConditionalAndExpression(p):
 
 def p_ConditionalOrExpression(p):
     '''ConditionalOrExpression : ConditionalAndExpression
-    | ConditionalOrExpression OP_LOR push ConditionalAndExpression codegen_binop
+    | ConditionalOrExpression OP_LOR push_icg ConditionalAndExpression codegen_binop
     '''
     if len(list(p))==6:
         p[0] = p[1:3]+p[4:5]
@@ -1155,8 +1236,8 @@ def p_ConditionalExpression(p):
 
 def p_AssignmentExpression(p):
     '''AssignmentExpression : ConditionalExpression
-    | UnaryExpression push '=' ConditionalExpression codegen_assign
-    | UnaryExpression push  AssignmentOperator push AssignmentExpression codegen_shorthand
+    | UnaryExpression push_icg '=' ConditionalExpression codegen_assign
+    | UnaryExpression push_icg  AssignmentOperator push_icg AssignmentExpression codegen_shorthand
     '''
     if len(list(p)) == 6:
         p[0] = p[1:2]+p[3:5]

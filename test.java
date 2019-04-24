@@ -5,15 +5,13 @@ class add {
         int y=0;
         y = 5;
         int p = 2*3;
+        int hghg = p + 888;
         j = j*2;
-        do{
-            y = y+1;
-            for(int i=0;i<4;i++){
-                y = y+1;
-                y = j*2;
-            }
+        {
+            int aoo = 8*6;
+            int boo = aoo + 5;
+            int zoo = boo + 20;
         }
-        while(j==0);
         int z=0;
     }
 }

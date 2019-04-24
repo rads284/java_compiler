@@ -1,5 +1,7 @@
 symbol_table = {}
-
+stack = []
+scopenum = 0
+currentscope = 0
 keywords = ["boolean", "break", "byte",
 "char", "class", "continue",
 "do", "double",
@@ -15,8 +17,8 @@ keywords = ["boolean", "break", "byte",
 "var", "void",
 "while","for"]
 for kw in keywords:
-    symbol_table[kw] = {}
-    symbol_table[kw]['type'] = "keyword"
+    symbol_table[(kw,0)] = {}
+    symbol_table[(kw,0)]['type'] = "keyword"
 
 # Tokens
 
@@ -112,17 +114,23 @@ def t_IDENTIFIER(t):
     if t.value == "true" or t.value == "false":
         t.type = "BOOLLIT"
         return t
-    if t.value in symbol_table:
-        if("type" in symbol_table[t.value]):
-            if(symbol_table[t.value]["type"] == "keyword"):
+    if (t.value,0) in symbol_table:
+        if("type" in symbol_table[(t.value,0)]):
+            if(symbol_table[(t.value,0)]["type"] == "keyword"):
                 t.type = t.value.upper()
-                symbol_table[t.value]["token"] = t
-    else:
-        symbol_table[t.value] = {}
-        symbol_table[t.value]["type"] = "identifier"
-        symbol_table[t.value]["token"] = t
-        symbol_table[t.value]["valid"] = False
+                symbol_table[(t.value,0)]["token"] = t
+    elif (t.value,currentscope) not in symbol_table:
+        # print('hola',t.value)
+        symbol_table[(t.value,currentscope)] = {}
+        symbol_table[(t.value,currentscope)]["type"] = "identifier"
+        symbol_table[(t.value,currentscope)]["token"] = t
+        symbol_table[(t.value,currentscope)]["valid"] = False
+    # print('\n\n======================')
+    # for symbol in symbol_table:
+    # 	print(symbol,"\t",symbol_table[symbol])
+    # print('=================\n\n')
     return t
+
 
 def t_semicolon(t):
     r';'
@@ -189,10 +197,20 @@ def t_rparen(t):
 def t_lbrace(t):
     r'{'
     t.type = '{'      # Set token type to the expected literal
+    global scopenum,currentscope
+    scopenum +=1
+    currentscope = scopenum
+    stack.append(scopenum)
     return t
 def t_rbrace(t):
     r'}'
     t.type = '}'      # Set token type to the expected literal
+    global currentscope
+    stack.pop()
+    if(len(stack)!=0):
+        currentscope = stack[-1]
+    else:
+        currentscope = 0
     return t
 def t_ass(t):
     r'='
