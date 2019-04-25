@@ -27,7 +27,7 @@ def retrieve_val(t,stack):
         return float(t)
     except:
         for scope in reversed(stack):
-            if (t,scope) in symbol_table:
+            if (t,scope) in symbol_table and symbol_table[t,scope]['valid']==True:
                 return symbol_table[t,scope]['value']
         else:
             return None
@@ -49,7 +49,7 @@ def retrieve_scope(t,stack):
     for a in reversed(stack):
         if (t,a) in symbol_table:
             return a
-    return 0
+    return -1
 
 stack = [0]
 
@@ -376,7 +376,8 @@ def p_CompilationUnit(p):
                 line[1] = ans
                 line[2] = ""
             scope = retrieve_scope(line[3],line[4])
-            symbol_table[(line[3],scope)]['value'] = ans
+            if scope!=-1:
+                symbol_table[(line[3],scope)]['value'] = ans
             # print(line[3],symbol_table[(line[3],scope)])
 
     for i in range(len(ig_list)):
@@ -802,7 +803,7 @@ def p_CodegenDoInit(p):
         lab_num+=1
         label.append(lab_num)
     print("L"+str(label[-2]),':')
-    quadruple("Label","","","L"+str(label[-2]))
+    quadruple("Label","","","L"+str(label[-2]),stack)
 
 def p_CodegenDoFinal(p):
     '''codegen_do_final : '''
@@ -813,15 +814,15 @@ def p_CodegenDoFinal(p):
     print(temp,' = not', stack_icg[-1])
     print('if',temp,'goto L'+str(label[-1]))
 
-    quadruple("!",stack_icg[-1],"",temp)
-    quadruple("if",temp,"","L"+str(label[-1]))
+    quadruple("!",stack_icg[-1],"",temp,stack)
+    quadruple("if",temp,"","L"+str(label[-1]),stack)
     var_num+=1
 
     print('goto L'+str(label[-2]))
     print('L'+str(label[-1]),':')
 
-    quadruple("goto","","","L"+str(label[-2]))
-    quadruple("Label","","","L"+str(label[-1]))
+    quadruple("goto","","","L"+str(label[-2]),stack)
+    quadruple("Label","","","L"+str(label[-1]),stack)
 
 def p_CodegenForInit(p):
     '''codegen_for_init :'''
@@ -832,7 +833,7 @@ def p_CodegenForInit(p):
         label.append(lab_num)
     print("L"+str(label[-4]),':')
 
-    quadruple("Label","","","L"+str(label[-4]))
+    quadruple("Label","","","L"+str(label[-4]),stack)
 
 def p_CodegenForExpr(p):
     '''codegen_for_expr :'''
@@ -842,14 +843,14 @@ def p_CodegenForExpr(p):
     print(temp,' = not', stack_icg[-1])
     print('if',temp,'goto L'+str(label[-3]))
 
-    quadruple("!",stack_icg[-1],"",temp)
-    quadruple("if",temp,"","L"+str(label[-3]))
+    quadruple("!",stack_icg[-1],"",temp,stack)
+    quadruple("if",temp,"","L"+str(label[-3]),stack)
     var_num+=1
     print('goto L'+str(label[-2]))
     print('L'+str(label[-1]),':')
 
-    quadruple("goto","","","L"+str(label[-2]))
-    quadruple("Label","","","L"+str(label[-1]))
+    quadruple("goto","","","L"+str(label[-2]),stack)
+    quadruple("Label","","","L"+str(label[-1]),stack)
 
 def p_CodegenForInc(p):
     '''codegen_for_inc :'''
@@ -858,8 +859,8 @@ def p_CodegenForInc(p):
     print('goto L'+str(label[-4]))
     print('L'+str(label[-2]),':')
 
-    quadruple("goto","","","L"+str(label[-4]))
-    quadruple("Label","","",'L'+str(label[-2]))
+    quadruple("goto","","","L"+str(label[-4]),stack)
+    quadruple("Label","","",'L'+str(label[-2]),stack)
 
 def p_CodegenFor(p):
     '''codegen_for :'''
@@ -868,8 +869,8 @@ def p_CodegenFor(p):
     print('goto L'+str(label[-1]))
     print('L'+str(label[-3]),':')
 
-    quadruple("goto","","","L"+str(label[-1]))
-    quadruple("label","","",'L'+str(label[-3]))
+    quadruple("goto","","","L"+str(label[-1]),stack)
+    quadruple("label","","",'L'+str(label[-3]),stack)
     for i in range(4): label.pop()
 
 
